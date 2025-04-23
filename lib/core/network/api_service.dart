@@ -17,7 +17,7 @@ class ApiService {
       }
       return const Left(StatusRequest.serverfailure);
     } on DioException catch (e) {
-      if (e.type == DioErrorType.unknown) {
+      if (e.type == DioExceptionType.unknown) {
         return const Left(StatusRequest.offlinefailure);
       }
       return const Left(StatusRequest.failure);
@@ -35,7 +35,7 @@ class ApiService {
         return Right(parser(response.data));
       }
       return const Left(StatusRequest.serverfailure);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       if (e.type == DioExceptionType.unknown) {
         return const Left(StatusRequest.offlinefailure);
       }
