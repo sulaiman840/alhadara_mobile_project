@@ -7,6 +7,11 @@ class AppRoutesNames {
   static const String verifyCodePage   = '/verifyCodePage';
   static const resetPassword = '/reset-password';
   static const initialSurvey  = '/initial-survey';
+  static const home  = '/home';
+  static const String categories = '/categories';
+  static const String myCourses = '/myCourses';
+  static const String coursesList = '/coursesList';
+  static const String myCourseDetails = '/myCourseDetails';
 
 
 }

@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     Timer(const Duration(seconds: 3), () {
-      GoRouter.of(context).go(AppRoutesNames.OnboardingScreen,);
+      GoRouter.of(context).go(AppRoutesNames.home,);
     });
   }
 

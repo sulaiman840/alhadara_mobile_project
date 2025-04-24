@@ -40,6 +40,7 @@ class _InitialSurveyPageState extends State<InitialSurveyPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى تعبئة جميع الحقول')),
       );
+
       return;
     }
     if (!_interests.values.any((v) => v)) {
@@ -50,7 +51,7 @@ class _InitialSurveyPageState extends State<InitialSurveyPage> {
     }
 
     // TODO: send data to your backend…
-
+    GoRouter.of(context).go(AppRoutesNames.home);
     // Then navigate on:
     // GoRouter.of(context).go(AppRoutesNames.home);
   }
@@ -75,17 +76,23 @@ class _InitialSurveyPageState extends State<InitialSurveyPage> {
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title: 'رجاء قم بتعبئة هذه الاستبيان الأولي',
+          title: 'الاستبيان الأولي',
           onBack: () => context.go(AppRoutesNames.login),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'نريد أن نعرف أكثر عن اهتماماتك عبر هذا الاستبيان ساعدنا في الإجابة على هذه الأسئلة من فضلك',
+                  style: TextStyle(
+                    fontSize: 18.sp,color: AppColor.textDarkBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 SizedBox(height: 16.h),
-
                 // two text fields
                 CustomTextFormField(
                   controller: _specialtyController,
