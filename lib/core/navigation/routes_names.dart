@@ -1,7 +1,12 @@
 class AppRoutesNames {
-  // static const String splash = '/';
-  static const String login = '/';
-  static const String register = '/register';
+
+  static const String SplashScreen = '/';
+  static const String OnboardingScreen = '/onboardingScreen';
+  static const String login = '/login';
+  static const String forgotPassword  = '/forgotPassword';
+  static const String verifyCodePage   = '/verifyCodePage';
+  static const resetPassword = '/reset-password';
+  static const initialSurvey  = '/initial-survey';
 
 
 }

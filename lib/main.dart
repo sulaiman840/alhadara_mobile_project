@@ -32,6 +32,8 @@ class MyApp extends StatelessWidget {
           supportedLocales: LocalizationService.supportedLocales,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
+
+
         ),
       ),
     );
