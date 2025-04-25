@@ -4,6 +4,7 @@ import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final double? elevation;
 
   final VoidCallback onBack;
   final Color? backgroundColor;
@@ -12,14 +13,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     Key? key,
     required this.title,
     required this.onBack,
-    this.backgroundColor,
+    this.backgroundColor,    this.elevation,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: backgroundColor ?? AppColor.background,
-      elevation: 0,
+      elevation: elevation ??0,
       centerTitle: true,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: AppColor.textDarkBlue),

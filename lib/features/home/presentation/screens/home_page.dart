@@ -48,10 +48,10 @@ class _HomePageState extends State<HomePage> {
 
   final List<_Course> _suggested = const [
     _Course(image: 'assets/images/programming.jpg', title: 'مبادئ البرمجة'),
-    _Course(image: 'assets/images/cooking.jpg', title: 'كورسات الطبخ'),
-    _Course(image: 'assets/images/English.jpg', title: 'كورسات إنجليزي'),
+    _Course(image: 'assets/images/cooking.jpg', title: 'كورس الطبخ'),
+    _Course(image: 'assets/images/English.jpg', title: 'كورس إنجليزي'),
     _Course(image: 'assets/images/tourism.jpg', title: 'مبادئ السياحة'),
-    _Course(image: 'assets/images/Adobe.png', title: 'كورسات التصميم'),
+    _Course(image: 'assets/images/Adobe.png', title: 'كورس التصميم'),
   ];
 
   @override

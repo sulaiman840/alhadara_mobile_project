@@ -12,6 +12,7 @@ class AppRoutesNames {
   static const String myCourses = '/myCourses';
   static const String coursesList = '/coursesList';
   static const String myCourseDetails = '/myCourseDetails';
+  static const String courseDetails = '/courseDetails';
 
 
 }

@@ -19,23 +19,23 @@ class CoursesListPage extends StatefulWidget {
 class _CoursesListPageState extends State<CoursesListPage> {
   final List<Map<String, String>> _courses = [
     {
-      'image': 'assets/images/Flutter.png',
-      'title': 'Flutter للمبتدئين',
-      'subtitle': 'تعلم فلاتر من الصفر',
+      'image': 'assets/images/English.jpg',
+      'title': 'كورس اللغة الانجليزية للمبتدئين',
+      'subtitle': 'تعلم اساسيات اللغة',
       'duration': '2/5/2025',
       'teacher': 'ا. احمد علي',
     },
     {
-      'image': 'assets/images/laravel.png',
-      'title': 'Laravel متقدمة',
-      'subtitle': 'دورة احتراف Laravel',
+      'image': 'assets/images/English2.jpg',
+      'title': 'كورس متقدم اللغة الانجليزية ',
+      'subtitle': 'مستوى متقدم',
       'duration': '2/5/2025',
       'teacher': 'ا. احمد علي',
     },
     {
-      'image': 'assets/images/programming.jpg',
-      'title': 'مبادئ البرمجة',
-      'subtitle': 'أساسيات',
+      'image': 'assets/images/English3.jpg',
+      'title': 'كورس محادثة اللغة الانجليزية ',
+      'subtitle': 'محادثة متقدمة',
       'duration': '2/5/2025',
       'teacher': 'ا. احمد علي',
     },
@@ -58,7 +58,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title: 'قائمة كورسات البرمجة',
+          title: 'قائمة كورسات اللغة الانجليزية',
           onBack: () => context.go(AppRoutesNames.home),
         ),
         body: SafeArea(
@@ -75,7 +75,8 @@ class _CoursesListPageState extends State<CoursesListPage> {
                     itemBuilder: (_, i) {
                       final c = _courses[i];
                       return InkWell(
-                        onTap: () {
+                        onTap: () {GoRouter.of(context).go(AppRoutesNames.courseDetails);
+
                           // TODO: navigate to course details
                         },
                         child: Padding(
@@ -116,7 +117,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                       style: TextStyle(
                                         fontSize: 14.sp,
                                         color: AppColor.textDarkBlue
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

@@ -5,6 +5,7 @@ import '../../features/auth/presentation/screens/forgot_password_page.dart';
 import '../../features/auth/presentation/screens/initial_survey_page.dart';
 import '../../features/auth/presentation/screens/login_page.dart';
 import '../../features/auth/presentation/screens/verify_code_page.dart';
+import '../../features/course_details/presentation/screens/course_details_page.dart';
 import '../../features/home/presentation/screens/courses_list_page.dart';
 import '../../features/home/presentation/screens/home_page.dart';
 import '../../features/home/presentation/screens/my_courses_page.dart';
@@ -78,6 +79,10 @@ class AppRouter {
       GoRoute(
         path: AppRoutesNames.myCourseDetails,
         builder: (context, state) => const MyCourseDetailsPage(),
+      ),
+      GoRoute(
+        path: AppRoutesNames.courseDetails,
+        builder: (context, state) => const CourseDetailsPage(),
       ),
     ],
   );
