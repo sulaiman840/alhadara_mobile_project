@@ -78,6 +78,7 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
                       height: forumPx,
                       child: OutlinedButton(
                         onPressed: () {
+                          context.go(AppRoutesNames.fourm);
                           // TODO: Navigate to forum
                         },
                         style: OutlinedButton.styleFrom(

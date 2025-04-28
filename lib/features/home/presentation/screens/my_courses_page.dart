@@ -166,8 +166,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                 },
                                 child: FaIcon(
                                   _favorites[i]
-                                      ? FontAwesomeIcons.solidHeart
-                                      : FontAwesomeIcons.heart,
+                                      ? FontAwesomeIcons.solidBookmark
+                                      : FontAwesomeIcons.bookmark,
                                   size: 20.r,
                                   color: _favorites[i]
                                       ? AppColor.purple

@@ -9,14 +9,14 @@ import '../../../../core/navigation/routes_names.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 
 
-class CoursesListPage extends StatefulWidget {
-  const CoursesListPage({Key? key}) : super(key: key);
+class FinishedCoursesPage extends StatefulWidget {
+  const FinishedCoursesPage({Key? key}) : super(key: key);
 
   @override
-  _CoursesListPageState createState() => _CoursesListPageState();
+  _FinishedCoursesPageState createState() => _FinishedCoursesPageState();
 }
 
-class _CoursesListPageState extends State<CoursesListPage> {
+class _FinishedCoursesPageState extends State<FinishedCoursesPage> {
   final List<Map<String, String>> _courses = [
     {
       'image': 'assets/images/English.jpg',
@@ -32,41 +32,33 @@ class _CoursesListPageState extends State<CoursesListPage> {
       'duration': '2/5/2025',
       'teacher': 'ا. احمد علي',
     },
-    {
-      'image': 'assets/images/English3.jpg',
-      'title': 'كورس محادثة اللغة الانجليزية ',
-      'subtitle': 'محادثة متقدمة',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
+
   ];
 
-  late List<bool> _favorites;
+
 
   @override
   void initState() {
     super.initState();
-    _favorites = List<bool>.filled(_courses.length, false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = 40.r;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title: 'قائمة كورسات اللغة الانجليزية',
-          onBack: () => context.go(AppRoutesNames.home),
+          title: 'الكورسات المنتهية',
+          onBack: () => context.go(AppRoutesNames.menu_page),
         ),
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
               children: [
-                SizedBox(height: 10.h),
+                SizedBox(height: 30.h),
                 Expanded(
                   child: ListView.separated(
                     itemCount: _courses.length,
@@ -157,24 +149,9 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                   ],
                                 ),
                               ),
-                              SizedBox(width: 12.w),
 
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _favorites[i] = !_favorites[i];
-                                  });
-                                },
-                                child: FaIcon(
-                                  _favorites[i]
-                                      ? FontAwesomeIcons.solidBookmark
-                                      : FontAwesomeIcons.bookmark,
-                                  size: 20.r,
-                                  color: _favorites[i]
-                                      ? AppColor.purple
-                                      : AppColor.gray3,
-                                ),
-                              ),
+
+
                             ],
                           ),
                         ),

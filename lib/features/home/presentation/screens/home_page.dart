@@ -7,7 +7,6 @@ import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 
 
-// Strongly-typed models
 class _Course {
   final String image;
   final String title;
@@ -27,7 +26,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedNav = 0;
   final int _points = 50;
 
   // Data
@@ -95,7 +93,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        bottomNavigationBar: _buildBottomNav(),
       ),
     );
   }
@@ -115,12 +112,13 @@ class _HomePageState extends State<HomePage> {
         Spacer(),
         _buildCircleIconButton(
           icon: FontAwesomeIcons.solidBell,
-          onTap: () {}, // TODO: notifications
+          onTap: () {GoRouter.of(context).go(AppRoutesNames.notifications);
+          },
         ),
         SizedBox(width: 12.w),
         _buildCircleAvatar(
           imagePath: 'assets/images/man.png',
-          onTap: () {}, // TODO: profile
+          onTap: () {GoRouter.of(context).go(AppRoutesNames.profile);}, // TODO: profile
         ),
       ],
     );
@@ -170,19 +168,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      height: 40.h,
-      padding: EdgeInsets.symmetric(horizontal: 12.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.search, color: AppColor.gray3),
-          SizedBox(width: 8.w),
-          Text('ابحث عن كورسات', style: TextStyle(color: AppColor.gray3, fontSize: 14.sp)),
-        ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(12.r),
+      onTap: () => GoRouter.of(context).go(AppRoutesNames.search),
+      child: Container(
+        height: 40.h,
+        padding: EdgeInsets.symmetric(horizontal: 12.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search, color: AppColor.gray3),
+            SizedBox(width: 8.w),
+            Text(
+              'ابحث عن كورسات',
+              style: TextStyle(color: AppColor.gray3, fontSize: 14.sp),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -353,35 +358,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBottomNav() {
-    final icons = [
-      FontAwesomeIcons.house,
-      FontAwesomeIcons.graduationCap,
-      FontAwesomeIcons.bookOpen,
-      FontAwesomeIcons.user,
-      FontAwesomeIcons.bell,
-    ];
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.only(bottom: 8.h, top: 4.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(icons.length, (i) {
-          final selected = i == _selectedNav;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedNav = i),
-            child: Container(
-              width: 48.w,
-              height: 48.w,
-              decoration: BoxDecoration(
-                color: selected ? AppColor.purple.withOpacity(0.1) : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icons[i], size: 24.r, color: selected ? AppColor.purple : AppColor.gray3),
-            ),
-          );
-        }),
-      ),
-    );
-  }
+
 }

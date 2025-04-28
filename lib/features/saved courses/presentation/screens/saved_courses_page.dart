@@ -9,14 +9,14 @@ import '../../../../core/navigation/routes_names.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 
 
-class CoursesListPage extends StatefulWidget {
-  const CoursesListPage({Key? key}) : super(key: key);
+class SavedCoursesPage extends StatefulWidget {
+  const SavedCoursesPage({Key? key}) : super(key: key);
 
   @override
-  _CoursesListPageState createState() => _CoursesListPageState();
+  _SavedCoursesPageState createState() => _SavedCoursesPageState();
 }
 
-class _CoursesListPageState extends State<CoursesListPage> {
+class _SavedCoursesPageState extends State<SavedCoursesPage> {
   final List<Map<String, String>> _courses = [
     {
       'image': 'assets/images/English.jpg',
@@ -32,13 +32,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
       'duration': '2/5/2025',
       'teacher': 'ا. احمد علي',
     },
-    {
-      'image': 'assets/images/English3.jpg',
-      'title': 'كورس محادثة اللغة الانجليزية ',
-      'subtitle': 'محادثة متقدمة',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
+
   ];
 
   late List<bool> _favorites;
@@ -46,7 +40,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
   @override
   void initState() {
     super.initState();
-    _favorites = List<bool>.filled(_courses.length, false);
+    _favorites = List<bool>.filled(_courses.length, true);
   }
 
   @override
@@ -58,7 +52,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title: 'قائمة كورسات اللغة الانجليزية',
+          title: 'الكورسات المحفوظة',
           onBack: () => context.go(AppRoutesNames.home),
         ),
         body: SafeArea(

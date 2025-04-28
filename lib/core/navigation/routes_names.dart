@@ -13,6 +13,23 @@ class AppRoutesNames {
   static const String coursesList = '/coursesList';
   static const String myCourseDetails = '/myCourseDetails';
   static const String courseDetails = '/courseDetails';
-
+  static const String fourm =  '/forum';
+  static const String fourmDetail = '/forum/detail';
+  static const activity = '/activity';
+  static const calendar = '/calendar';
+  static const search = '/search';
+  static const notifications = '/notifications';
+  static const savedCourses = '/savedCourses';
+  static const profile = '/profile';
+  static const menu_page = '/menu_page';
+  static const settings = '/settings';
+  static const language = '/language';
+  static const themeMode = '/themeMode';
+  static const finishedCourses = '/finishedCourses';
+  static const testResults = '/testResults';
+  static const gifts = '/gifts';
+  static const complaints = '/complaints';
+  static const trainers = '/trainers';
+  static const trainersDetails = '/trainersDetails';
 
 }

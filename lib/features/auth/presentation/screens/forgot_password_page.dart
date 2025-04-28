@@ -1,4 +1,3 @@
-// lib/features/auth/ui/forgot_password_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -32,7 +31,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (v == null || v.trim().isEmpty) {
       return 'الرجاء إدخال رقم هاتفك';
     }
-    // you can add a more sophisticated regex here if you like
     return null;
   }
 
@@ -69,7 +67,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       children: [
                         SizedBox(height: 30.h),
 
-                        // Subtitle
                         Text(
                           'لا تقلق، ما عليك سوى كتابة رقم هاتفك\nوسنرسل رمز التحقق',
                           textAlign: TextAlign.center,
