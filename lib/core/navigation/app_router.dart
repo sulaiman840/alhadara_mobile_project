@@ -1,15 +1,25 @@
-// lib/core/navigation/app_router.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
 import 'package:alhadara_mobile_project/shared/widgets/bottom_nav_bar.dart';
 
+import '../../features/auth/cubit/forgot_password_cubit.dart';
+import '../../features/auth/cubit/login_cubit.dart';
+import '../../features/auth/cubit/reset_password_cubit.dart';
+import '../../features/auth/cubit/verify_cubit.dart';
+import '../../features/complaints/cubit/complaints_cubit.dart';
 import '../../features/complaints/presentation/screens/complaints_page.dart';
+import '../../features/course_details/presentation/screens/test_details_page.dart';
 import '../../features/finished courses/presentation/screens/finished_courses_page.dart';
+import '../../features/gifts/cubit/gifts_cubit.dart';
 import '../../features/gifts/presentation/screens/gifts_page.dart';
+import '../../features/home/cubit/points_cubit.dart';
 import '../../features/languages/presentation/screens/language_selection_page.dart';
+import '../../features/menu/cubit/logout_cubit/logout_cubit.dart';
 import '../../features/menu/presentation/screens/menu_page.dart';
+import '../../features/my_course_details/presentation/screens/my_test_details_page.dart';
 import '../../features/notifications/presentation/screens/notifications_page.dart';
 import '../../features/profile/presentation/screens/profile_page.dart';
 import '../../features/saved courses/presentation/screens/saved_courses_page.dart';
@@ -31,14 +41,17 @@ import '../../features/my_course_details/presentation/screens/my_course_details_
 import '../../features/course_details/presentation/screens/course_details_page.dart';
 import '../../features/forum/presentation/screens/forum_page.dart';
 import '../../features/forum/presentation/screens/forum_detail_page.dart';
+import '../../features/test_results/cubit/grades_cubit.dart';
 import '../../features/test_results/presentation/screens/test_results_page.dart';
 import '../../features/theme_mode/presentation/screens/theme_mode_selection_page.dart';
 import '../../features/trainers/presentation/screens/trainer_details_page.dart';
 import '../../features/trainers/presentation/screens/trainers_page.dart';
+import '../injection.dart';
 
 class AppRouter {
   static final router = GoRouter(
     initialLocation: AppRoutesNames.SplashScreen,
+    debugLogDiagnostics: true,
     routes: [
       ShellRoute(
         builder: (context, state, child) {
@@ -92,12 +105,24 @@ class AppRouter {
         routes: [
           GoRoute(
             path: AppRoutesNames.home,
-            pageBuilder: (ctx, state) => CustomTransitionPage(
-              key: state.pageKey,
-              child: const HomePage(),
-              transitionDuration: Duration.zero,
-              transitionsBuilder: (_, __, ___, child) => child,
-            ),
+            pageBuilder: (ctx, state) {
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: MultiBlocProvider(
+                  providers: [
+                    BlocProvider<PointsCubit>(
+                      create: (_) => getIt<PointsCubit>()..loadPoints(),
+                    ),
+
+                    // If HomePage also needs GiftsCubit for “recent gifts” or something:
+
+                  ],
+                  child: const HomePage(),
+                ),
+                transitionDuration: Duration.zero,
+                transitionsBuilder: (_, __, ___, child) => child,
+              );
+            },
           ),
           GoRoute(
             path: AppRoutesNames.activity,
@@ -130,7 +155,10 @@ class AppRouter {
             path: AppRoutesNames.menu_page,
             pageBuilder: (ctx, state) => CustomTransitionPage(
               key: state.pageKey,
-              child: const MenuPage(),
+              child: BlocProvider<LogoutCubit>(
+                create: (_) => getIt<LogoutCubit>(),
+                child: const MenuPage(),
+              ),
               transitionDuration: Duration.zero,
               transitionsBuilder: (_, __, ___, child) => child,
             ),
@@ -164,20 +192,41 @@ class AppRouter {
 
       GoRoute(
         path: AppRoutesNames.login,
-        builder: (_, __) => const LoginPage(),
+        builder: (context, state) {
+          return BlocProvider<LoginCubit>(
+            create: (_) => getIt<LoginCubit>(),
+            child: const LoginPage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.forgotPassword,
-        builder: (_, __) => const ForgotPasswordPage(),
+        builder: (context, state) {
+          return BlocProvider<ForgotPasswordCubit>(
+            create: (_) => getIt<ForgotPasswordCubit>(),
+            child: const ForgotPasswordPage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.verifyCodePage,
-        builder: (_, __) => const VerifyCodePage(),
+        builder: (context, state) {
+          return BlocProvider<VerifyCubit>(
+            create: (_) => getIt<VerifyCubit>(),
+            child: const VerifyCodePage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.resetPassword,
-        builder: (_, __) => const ResetPasswordPage(),
+        builder: (context, state) {
+          return BlocProvider<ResetPasswordCubit>(
+            create: (_) => getIt<ResetPasswordCubit>(),
+            child: const ResetPasswordPage(),
+          );
+        },
       ),
+
       GoRoute(
         path: AppRoutesNames.initialSurvey,
         builder: (context, state) => const InitialSurveyPage(),
@@ -254,20 +303,44 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutesNames.testResults,
-        builder: (_, __) => const TestResultsPage(),
+        builder: (context, state) {
+          return BlocProvider<GradesCubit>(
+            create: (_) => getIt<GradesCubit>()..fetchGrades(),
+            child: const TestResultsPage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.gifts,
-        builder: (_, __) => const GiftsPage(),
+        builder: (context, state) {
+          return BlocProvider<GiftsCubit>(
+            create: (_) => getIt<GiftsCubit>()..loadGifts(),
+            child: const GiftsPage(),
+          );
+        },
       ),
+
       GoRoute(
         path: AppRoutesNames.complaints,
-        builder: (_, __) => const ComplaintsPage(),
+        builder: (context, state) {
+          return BlocProvider<ComplaintsCubit>(
+            create: (_) => getIt<ComplaintsCubit>(),
+            child: const ComplaintsPage(),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.trainersDetails,
         builder: (_, __) =>  TrainerDetailsPage(),
       ),
+      GoRoute(
+        path: AppRoutesNames.testDetails,
+        builder: (_, __) =>  TestDetailsPage(),
+      ),
+      GoRoute(
+        path: AppRoutesNames.myTestDetails,
+        builder: (_, __) =>  MyTestDetailsPage(),
+      )
     ],
   );
 }

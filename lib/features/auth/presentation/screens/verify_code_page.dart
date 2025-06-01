@@ -1,11 +1,17 @@
+/// lib/features/auth/presentation/screens/verify_code_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
+import '../../cubit/verify_cubit.dart';
+import '../../cubit/verify_state.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
+import '../../../../shared/widgets/loading_overlay.dart'; // if you use overlay
 
 class VerifyCodePage extends StatefulWidget {
   const VerifyCodePage({Key? key}) : super(key: key);
@@ -15,10 +21,9 @@ class VerifyCodePage extends StatefulWidget {
 }
 
 class _VerifyCodePageState extends State<VerifyCodePage> {
-  // we’ll keep four controllers & focus nodes
   final List<TextEditingController> _controllers =
-  List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  List.generate(5, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(5, (_) => FocusNode());
 
   @override
   void dispose() {
@@ -28,53 +33,84 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
   }
 
   void _onSubmit() {
-    // gather the code
-    final code = _controllers.map((c) => c.text).join();
-    if (code.length < 4) {
+    final rawCode = _controllers.map((c) => c.text).join();
+    if (rawCode.length < 5) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى إدخال جميع أرقام الرمز')),
       );
       return;
     }
-    GoRouter.of(context).go(AppRoutesNames.resetPassword);
-
-    // TODO: call your "verify code" API with `code`
+    final reversedCode = rawCode.split('').reversed.join();
+    final token = int.tryParse(reversedCode);
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرمز غير صالح')),
+      );
+      return;
+    }
+    context.read<VerifyCubit>().verifyAccount(token: token);
   }
 
   void _onResend() {
-    // TODO: call your "resend code" API
+    // TODO: your backend “resend code” logic
   }
 
   @override
   Widget build(BuildContext context) {
-    // your email – ideally passed in via constructor or state
-    const email = 'jarxxxxx@email.com';
+    return BlocConsumer<VerifyCubit, VerifyState>(
+      listener: (context, state) {
+        if (state is VerifySuccess) {
+          // Translate backend’s English to Arabic if necessary:
+          final msgLower = state.message.trim().toLowerCase();
+          String displayMsg;
+          if (msgLower == 'your account has been verified') {
+            displayMsg = 'تم التحقق من حسابك بنجاح';
+          } else {
+            // fallback to whatever the server actually sent
+            displayMsg = state.message;
+          }
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppColor.background,
-        appBar: CustomAppBar(
-          title: 'التحقق من الرمز',
-          onBack: () => context.go(AppRoutesNames.forgotPassword),
-        ),
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (ctx, constraints) => SingleChildScrollView(
-              padding:
-              EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-              child: ConstrainedBox(
-                constraints:
-                BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(displayMsg)),
+          );
+          GoRouter.of(context).go(AppRoutesNames.login);
+        }
+
+        if (state is VerifyFailure) {
+          final errLower = state.errorMessage.trim().toLowerCase();
+          String displayErr;
+          if (errLower.contains('invalid code')) {
+            displayErr = 'الرمز غير صالح';
+          } else if (errLower.contains('account not verified')) {
+            displayErr = 'الحساب غير مُفعّل بعد';
+          } else {
+            displayErr = state.errorMessage;
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(displayErr)),
+          );
+        }
+      },
+      builder: (context, state) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            backgroundColor: AppColor.background,
+            appBar: CustomAppBar(
+              title: 'التحقق من الرمز',
+              onBack: () => context.go(AppRoutesNames.login),
+            ),
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  ListView(
+                    padding:
+                    EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                     children: [
                       SizedBox(height: 30.h),
-
-                      // subtitle
                       Text(
-                        'أدخل الرمز الذي أرسلناه إلى عنوان بريدك التالي',
+                        'أدخل الرمز المكون من 5 أرقام الذي أرسلناه إلى بريدك الإلكتروني',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: AppColor.textDarkBlue,
@@ -82,71 +118,70 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
                         ),
                       ),
                       SizedBox(height: 8.h),
-
-                      // email line
-                      Text(
-                        email,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColor.textDarkBlue,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 30.h),
-
-                      // the 4 boxes
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (i) {
-                          return Container(
-                            margin: EdgeInsets.symmetric(horizontal: 8.w),
-                            width: 60.w,
-                            height: 60.w,
-                            child: TextField(
-                              controller: _controllers[i],
-                              focusNode: _focusNodes[i],
-                              textAlign: TextAlign.center,
-                              keyboardType: TextInputType.number,
-                              maxLength: 1,
-                              style: TextStyle(color: AppColor.textDarkBlue,
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              decoration: InputDecoration(
-                                counterText: '',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.r),
+                      Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(5, (i) {
+                            return Container(
+                              margin: EdgeInsets.symmetric(horizontal: 6.w),
+                              width: 50.w,
+                              height: 50.w,
+                              child: TextField(
+                                controller: _controllers[i],
+                                focusNode: _focusNodes[i],
+                                textAlign: TextAlign.center,
+                                textDirection: TextDirection.ltr,
+                                keyboardType: TextInputType.number,
+                                maxLength: 1,
+                                style: TextStyle(
+                                  color: AppColor.textDarkBlue,
+                                  fontSize: 24.sp,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  borderSide: BorderSide(
-                                      color: AppColor.purple, width: 2),
+                                decoration: InputDecoration(
+                                  counterText: '',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderSide: BorderSide(
+                                      color: AppColor.purple,
+                                      width: 2,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              onChanged: (v) {
-                                if (v.length == 1) {
-                                  if (i < 3) {
-                                    _focusNodes[i + 1].requestFocus();
-                                  } else {
-                                    _focusNodes[i].unfocus();
+                                onChanged: (v) {
+                                  if (v.length == 1) {
+                                    if (i > 0) {
+                                      _focusNodes[i - 1].requestFocus();
+                                    } else {
+                                      _focusNodes[i].unfocus();
+                                    }
                                   }
-                                }
-                              },
-                            ),
-                          );
-                        }),
+                                },
+                              ),
+                            );
+                          }),
+                        ),
                       ),
                       SizedBox(height: 40.h),
 
-                      // verify button
-                      CustomButton(
-                        text: 'تحقق من الرمز',
-                        onPressed: _onSubmit,
+                      BlocBuilder<VerifyCubit, VerifyState>(
+                        builder: (context, verifyState) {
+                          return CustomButton(
+                            text: verifyState is VerifyLoading
+                                ? 'جارٍ التحقق...'
+                                : 'تحقق من الرمز',
+                            onPressed: verifyState is VerifyLoading
+                                ? null
+                                : _onSubmit,
+                          );
+                        },
                       ),
                       SizedBox(height: 12.h),
 
-                      // resend link
                       Center(
                         child: TextButton(
                           onPressed: _onResend,
@@ -160,17 +195,21 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
                         ),
                       ),
 
-                      // pushes everything up if keyboard appears
-                      const Spacer(),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 100.h),
                     ],
                   ),
-                ),
+
+                  // Full-screen loading overlay:
+                  if (state is VerifyLoading)
+                    const LoadingOverlay(
+                      message: 'جارٍ التحقق من الرمز...',
+                    ),
+                ],
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

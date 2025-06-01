@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../cubit/login_cubit.dart';
+import '../../cubit/login_state.dart';
+import '../../../../shared/widgets/loading_overlay.dart';
 import '../../../../shared/widgets/TextFormField/custom_password_field.dart';
 import '../../../../shared/widgets/TextFormField/custom_text_form_field.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
@@ -17,9 +21,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey            = GlobalKey<FormState>();
-  final _emailController    = TextEditingController();
-  final _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey        = GlobalKey<FormState>();
+  final TextEditingController _emailController    = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -40,10 +44,16 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      // TODO: call your login API
       FocusScope.of(context).unfocus();
-      GoRouter.of(context).go(AppRoutesNames.initialSurvey);
+      final email    = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      const fcmToken = 'dummy_fcm_token';
 
+      BlocProvider.of<LoginCubit>(context).login(
+        email: email,
+        password: password,
+        fcmToken: fcmToken,
+      );
     }
   }
 
@@ -59,99 +69,143 @@ class _LoginPageState extends State<LoginPage> {
           onBack: () => context.go(AppRoutesNames.OnboardingScreen),
         ),
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (ctx, constraints) => SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: 30.h),
+          child: BlocConsumer<LoginCubit, LoginState>(
+            listener: (context, state) {
+              if (state is LoginSuccess) {
+                GoRouter.of(context).go(AppRoutesNames.home);
+              } else if (state is LoginUnverified) {
+                GoRouter.of(context).go(AppRoutesNames.verifyCodePage);
+              } else if (state is LoginFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.errorMessage)),
+                );
+              }
+            },
+            builder: (context, state) {
+              return Stack(
+                children: [
 
-                        // Email
-                        CustomTextFormField(
-                          controller: _emailController,
-                          hintText: 'البريد الإلكتروني',
-                          keyboardType: TextInputType.emailAddress,
-                          validator: _validateEmail,
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // Password
-                        CustomPasswordFormField(
-                          controller: _passwordController,
-                          hintText: 'كلمة المرور',
-                          validator: _validateNotEmpty,
-                        ),
-                        SizedBox(height: 8.h),
-
-                        // Forgot password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {       GoRouter.of(context).go(AppRoutesNames.forgotPassword);
-                            },
-                            child: Text(
-                              'نسيت كلمة المرور؟',
-                              style: TextStyle(color: AppColor.purple, fontSize: 14.sp),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-
-                        // Login
-                        CustomButton(text: 'تسجيل دخول', onPressed: _submit),
-                        SizedBox(height: 12.h),
-
-                        // Guest
-                        Center(
-                          child: TextButton(
-                            onPressed: () {
-                              // GoRouter.of(context).go(AppRoutesNames.home);
-                            },
-                            child: Text(
-                              'قم بتسجيل الدخول كزائر',
-                              style: TextStyle(
-                                color: AppColor.textDarkBlue,
-                                fontSize: 14.sp,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-
-                        const OrDivider(),
-                        SizedBox(height: 16.h),
-
-                        // Google
-                        OutlinedButton.icon(
-                          onPressed: () { /* TODO */ },
-                          icon: FaIcon(FontAwesomeIcons.google, color: AppColor.purple, size: 20.r),
-                          label: Text(
-                            'تسجيل بواسطة جوجل',
-                            style: TextStyle(color: AppColor.textDarkBlue, fontSize: 16.sp),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
-                            side: BorderSide(color: AppColor.purple),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
-                          ),
-                        ),
-
-                        // push Google button to bottom
-                        const Spacer(),
-                        SizedBox(height: 16.h),
-                      ],
+                  ListView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 16.h,
                     ),
+                    children: [
+                      SizedBox(height: 30.h),
+
+                      CustomTextFormField(
+                        controller: _emailController,
+                        hintText: 'البريد الإلكتروني',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _validateEmail,
+                      ),
+                      SizedBox(height: 16.h),
+
+                      CustomPasswordFormField(
+                        controller: _passwordController,
+                        hintText: 'كلمة المرور',
+                        validator: _validateNotEmpty,
+                      ),
+                      SizedBox(height: 8.h),
+
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            GoRouter.of(context)
+                                .go(AppRoutesNames.forgotPassword);
+                          },
+                          child: Text(
+                            'نسيت كلمة المرور؟',
+                            style: TextStyle(
+                              color: AppColor.purple,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+
+                            BlocBuilder<LoginCubit, LoginState>(
+                              builder: (context, currentState) {
+                                return CustomButton(
+                                  text: currentState is LoginLoading
+                                      ? 'جارٍ تسجيل الدخول...'
+                                      : 'تسجيل دخول',
+                                  onPressed: currentState is LoginLoading
+                                      ? null
+                                      : _submit,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+
+                      // Guest login link
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            // GoRouter.of(context).go(AppRoutesNames.home);
+                          },
+                          child: Text(
+                            'قم بتسجيل الدخول كزائر',
+                            style: TextStyle(
+                              color: AppColor.textDarkBlue,
+                              fontSize: 14.sp,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      const OrDivider(),
+                      SizedBox(height: 16.h),
+
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // TODO: implement Google sign‐in
+                        },
+                        icon: FaIcon(
+                          FontAwesomeIcons.google,
+                          color: AppColor.purple,
+                          size: 20.r,
+                        ),
+                        label: Text(
+                          'تسجيل بواسطة جوجل',
+                          style: TextStyle(
+                            color: AppColor.textDarkBlue,
+                            fontSize: 16.sp,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          side: BorderSide(color: AppColor.purple),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24.r),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 100.h),
+                    ],
                   ),
-                ),
-              ),
-            ),
+
+                  if (state is LoginLoading)
+                    const LoadingOverlay(
+                      message: 'جارٍ تسجيل الدخول...',
+                    ),
+                ],
+              );
+            },
           ),
         ),
       ),

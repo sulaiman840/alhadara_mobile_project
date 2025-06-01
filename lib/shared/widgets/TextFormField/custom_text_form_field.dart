@@ -26,7 +26,6 @@ class CustomTextFormField extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
 
-      // ← this controls the color (and fontSize, etc.) of the **entered** text
       style: TextStyle(
         color: AppColor.textDarkBlue,
         fontSize: 16.sp,

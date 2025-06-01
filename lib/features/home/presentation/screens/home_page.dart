@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../cubit/points_cubit.dart';
+import '../../cubit/points_state.dart';
 
 
 class _Course {
@@ -26,7 +29,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final int _points = 50;
 
   // Data
   final List<_Course> _myCourses = const [
@@ -51,7 +53,16 @@ class _HomePageState extends State<HomePage> {
     _Course(image: 'assets/images/tourism.jpg', title: 'مبادئ السياحة'),
     _Course(image: 'assets/images/Adobe.png', title: 'كورس التصميم'),
   ];
+  @override
+  void initState() {
+    super.initState();
+    // We assume PointsCubit (and any other Cubits) have already been provided
+    // by the router, so here we just tell it to load.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PointsCubit>().loadPoints();
 
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -193,44 +204,72 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPointsCapsule() {
-    return Container(
-      width: double.infinity,
-      height: 48.h,
-      decoration: BoxDecoration(
-        color: AppColor.purple,
-        borderRadius: BorderRadius.circular(24.r),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SizedBox(width: 10.w),
-                FaIcon(FontAwesomeIcons.graduationCap, color: Colors.white, size: 20.r),
-                SizedBox(width: 8.w),
-                Text(
-                  'نقاطك الحالية',
-                  style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+    return BlocBuilder<PointsCubit, PointsState>(
+      builder: (context, state) {
+        Widget rightSide;
+        if (state is PointsLoading) {
+          rightSide = const Center(
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ),
+          );
+        } else if (state is PointsFailure) {
+          rightSide = Center(
+            child: Text(
+              state.errorMessage,
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+            ),
+          );
+        } else if (state is PointsSuccess) {
+          rightSide = Text(
+            '${state.points} نقطة',
+            style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+          );
+        } else {
+          rightSide = const SizedBox.shrink();
+        }
+
+        return Container(
+          width: double.infinity,
+          height: 48.h,
+          decoration: BoxDecoration(
+            color: AppColor.purple,
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 10.w),
+                    FaIcon(FontAwesomeIcons.graduationCap, color: Colors.white, size: 20.r),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'نقاطك الحالية',
+                      style:
+                      TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    rightSide,
+                    SizedBox(width: 10.w),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text('$_points نقطة',
-                    style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500)),
-                SizedBox(width: 10.w),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
-
   Widget _buildCategoryChips() {
     return SizedBox(
       height: 48.h,
@@ -339,20 +378,31 @@ class _HomePageState extends State<HomePage> {
       ),
       itemBuilder: (_, i) {
         final c = _suggested[i];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: Image.asset(c.image, fit: BoxFit.cover),
+        return GestureDetector(
+          onTap: () {
+            GoRouter.of(context).go(AppRoutesNames.myTestDetails);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: Image.asset(c.image, fit: BoxFit.cover),
+                ),
               ),
-            ),
-            SizedBox(height: 8.h),
-            Text(c.title,
+              SizedBox(height: 8.h),
+              Text(
+                c.title,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14.sp, color: AppColor.purple, fontWeight: FontWeight.w500)),
-          ],
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColor.purple,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

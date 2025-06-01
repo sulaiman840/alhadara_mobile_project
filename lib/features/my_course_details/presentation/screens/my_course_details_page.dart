@@ -1,5 +1,3 @@
-// lib/features/auth/ui/course_details_page.dart
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

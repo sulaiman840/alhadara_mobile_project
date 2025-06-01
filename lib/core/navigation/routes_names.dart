@@ -31,5 +31,7 @@ class AppRoutesNames {
   static const complaints = '/complaints';
   static const trainers = '/trainers';
   static const trainersDetails = '/trainersDetails';
+  static const testDetails = '/testDetails';
+  static const myTestDetails = '/myTestDetails';
 
 }
