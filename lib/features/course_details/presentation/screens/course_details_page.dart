@@ -1,7 +1,4 @@
-
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -9,9 +6,17 @@ import 'package:go_router/go_router.dart';
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../home/data/models/course_model.dart';
 
 class CourseDetailsPage extends StatefulWidget {
-  const CourseDetailsPage({Key? key}) : super(key: key);
+  final CourseModel course;
+  final String deptName;
+
+  const CourseDetailsPage({
+    Key? key,
+    required this.course,
+    required this.deptName,
+  }) : super(key: key);
 
   @override
   _CourseDetailsPageState createState() => _CourseDetailsPageState();
@@ -26,21 +31,21 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     const bannerHeight = 300.0;
     const forumBtnH = 48.0;
 
-    // Scale them to actual logical pixels
     final bannerPx = bannerHeight.h;
     final forumPx = forumBtnH.h;
-    // When scroll offset reaches this, the tabs are “pinned”
     final pinThreshold = bannerPx + forumPx / 2 - kToolbarHeight;
+
+    // Format “active since” from course.createdAt
+    final created = widget.course.createdAt;
+    final activeSince = '${created.day}/${created.month}/${created.year}';
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: DefaultTabController(
-        length: 2,
+        length: 1,
         child: NotificationListener<ScrollNotification>(
           onNotification: (sn) {
-            // only react to the outer CustomScrollView
             if (sn.depth != 0) return false;
-
             final offset = sn.metrics.pixels;
             final shouldPin = offset >= pinThreshold;
             if (shouldPin != _tabsPinned) {
@@ -52,24 +57,57 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             backgroundColor: AppColor.background,
             appBar: CustomAppBar(
               title: 'تفاصيل الكورس',
-              onBack: () => context.go(AppRoutesNames.coursesList),
+              onBack: () {
+                // We know: widget.course.departmentId  and  widget.deptName
+                context.go(
+                  AppRoutesNames.coursesList,
+                  extra: {
+                    'id': widget.course.departmentId,
+                    'name': widget.deptName,
+                  },
+                );
+              },
             ),
             body: CustomScrollView(
               slivers: [
-                // ── Banner ─────────────────────────────
+                // ── Dynamic Banner ─────────────────────────────
                 SliverToBoxAdapter(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.r),
-                    child: Image.asset(
-                      'assets/images/English.jpg',
+                    child: Image.network(
+                      'http://192.168.195.198:8000/${widget.course.photo}',
                       width: double.infinity,
-                      height: 200.h,
+                      height: 300.h,
                       fit: BoxFit.contain,
+                      errorBuilder: (ctx, err, stack) => Container(
+                        height: 200.h,
+                        color: Colors.grey[200],
+                        child: Icon(
+                          Icons.broken_image,
+                          size: 40.r,
+                          color: AppColor.gray3,
+                        ),
+                      ),
+                      loadingBuilder: (ctx, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          height: 200.h,
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                  (loadingProgress.expectedTotalBytes!)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
 
-                // ── Spacer + Forum Button ───────────────────────
                 SliverToBoxAdapter(child: SizedBox(height: 12.h)),
                 SliverToBoxAdapter(
                   child: Center(
@@ -78,7 +116,13 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       height: forumPx,
                       child: OutlinedButton(
                         onPressed: () {
-                          // TODO: Navigate to forum
+                          context.go(
+                            AppRoutesNames.pendingSections,
+                            extra: {
+                              'course': widget.course,
+                              'deptName': widget.deptName,
+                            },
+                          );
                         },
                         style: OutlinedButton.styleFrom(
                           backgroundColor: AppColor.purple,
@@ -101,15 +145,16 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 ),
                 SliverToBoxAdapter(child: SizedBox(height: 24.h)),
 
-                // ── Title & Meta ───────────────────────
+                // ── Dynamic Title & Meta ───────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Course name
                         Text(
-                          'كورس لغة انجليزية: للمبتدئين',
+                          widget.course.name,
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
@@ -117,112 +162,50 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                           ),
                         ),
                         SizedBox(height: 12.h),
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w, vertical: 4.h),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Text(
-                                'نشط منذ 1/1/2024',
-                                style: TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Spacer(),
-                            FaIcon(FontAwesomeIcons.solidStar,
-                                color: AppColor.yellow, size: 14.r),
-                            SizedBox(width: 4.w),
-                            Text(
-                              '4.8',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColor.textDarkBlue,
-                              ),
-                            ),
-                          ],
+
+                        Text(
+                          widget.course.description,
+                          style: TextStyle(
+                              fontSize: 14.sp, color: AppColor.textDarkBlue),
                         ),
-                        SizedBox(height: 12.h),
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16.r,
-                              backgroundImage:
-                              AssetImage('assets/images/man.png'),
-                            ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'احمد بلال',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColor.textDarkBlue,
-                              ),
-                            ),
-                            Spacer(),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Trainer profile
-                              },
-                              style: TextButton.styleFrom(
-                                  tapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap),
-                              child: Text(
-                                'زيارة بروفايل المدرب',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColor.purple,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+
                         SizedBox(height: 24.h),
                       ],
                     ),
                   ),
                 ),
 
-                // ── Tabs ────────────────────────────────
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _TabBarDelegate(
-                    const [
-                      Tab(text: 'معلومات الكورس'),
-                      Tab(text: 'خصومات'),
-                    ],
-                    pinned: _tabsPinned,
-                  ),
-                ),
-
-                // ── Tab Body ─────────────────────────────
-                SliverFillRemaining(
-                  child: Stack(
-                    children: [
-                      const TabBarView(
-                        children: [
-                          CourseInfoTab(),
-                         DiscountsTab(),
-
-                        ],
-                      ),
-                      if (!_tabsPinned)
-                        Positioned.fill(
-                          child: Container(
-                            color: AppColor.background.withValues(alpha: 0.8),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                // // ── Tabs ────────────────────────────────
+                // SliverPersistentHeader(
+                //   pinned: true,
+                //   delegate: _TabBarDelegate(
+                //     const [
+                //       Tab(text: 'خصومات'),
+                //     ],
+                //     pinned: _tabsPinned,
+                //     isScrollable: true,
+                //   ),
+                // ),
+                //
+                // // ── Tab Body ─────────────────────────────
+                // SliverFillRemaining(
+                //   child: Stack(
+                //     children: [
+                //       TabBarView(
+                //         children: [
+                //           // Pass the actual description into CourseInfoTab:
+                //           const DiscountsTab(),
+                //         ],
+                //       ),
+                //       if (!_tabsPinned)
+                //         Positioned.fill(
+                //           child: Container(
+                //             color: AppColor.background.withOpacity(0.8),
+                //           ),
+                //         ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -232,70 +215,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   }
 }
 
-
-/// Tab 1: course information
-class CourseInfoTab extends StatelessWidget {
-  const CourseInfoTab({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('وصف الكورس',
-              style: TextStyle(
-                  fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColor.textDarkBlue)),
-          SizedBox(height: 8.h),
-          Text(
-            'في هذا الكورس سنتعلم أساسيات اللغة الإنجليزية للمبتدئين: قواعد بسيطة، مفردات يومية، ومهارات المحادثة.',
-            style: TextStyle(fontSize: 14.sp, color: AppColor.textDarkBlue),
-          ),
-          SizedBox(height: 16.h),
-
-          Text('أهداف الكورس',
-              style: TextStyle(
-                  fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColor.textDarkBlue)),
-          SizedBox(height: 8.h),
-          _buildBullet('فهم الحروف والأصوات الإنجليزية'),
-          _buildBullet('تعلّم مفردات الاستخدام اليومي'),
-          _buildBullet('بناء جمل بسيطة'),
-          _buildBullet('مهارات الاستماع والمحادثة الأولية'),
-          SizedBox(height: 16.h),
-
-          Text('المتطلبات',
-              style: TextStyle(
-                  fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColor.textDarkBlue)),
-          SizedBox(height: 8.h),
-          _buildBullet('لا يتطلب معرفة سابقة بالإنجليزية'),
-          _buildBullet('الرغبة في التعلم والتدريب اليومي'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBullet(String text) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('•  ', style: TextStyle(fontSize: 14.sp, height: 1.4)),
-          Expanded(
-            child: Text(text,
-                style: TextStyle(fontSize: 14.sp, color: AppColor.textDarkBlue, height: 1.4)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class DiscountsTab extends StatelessWidget {
   const DiscountsTab({Key? key}) : super(key: key);
 
-  // Sample offers data
   final List<Map<String, String>> _offers = const [
     {
       'title': 'خصم 50٪ للمبتدئين',
@@ -305,7 +227,6 @@ class DiscountsTab extends StatelessWidget {
       'title': 'خصم 30٪ للطلبة',
       'subtitle': 'احصل على عرض خاص للطلبة عند التسجيل في غضون ٧ أيام.',
     },
-
   ];
 
   @override
@@ -382,16 +303,18 @@ class DiscountsTab extends StatelessWidget {
   }
 }
 
-
-
 /// Fades the TabBar until it’s scrolled into its pinned position
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final List<Tab> _tabs;
   final bool pinned;
-  _TabBarDelegate(this._tabs, {required this.pinned});
+  final bool isScrollable;
+
+  _TabBarDelegate(this._tabs,
+      {required this.pinned, this.isScrollable = false});
 
   @override
   double get minExtent => _tabs.first.preferredSize.height;
+
   @override
   double get maxExtent => _tabs.first.preferredSize.height;
 
@@ -404,11 +327,12 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         color: AppColor.background,
         elevation: overlapsContent ? 4 : 0,
         child: TabBar(
-          indicatorColor: AppColor.purple,
-          labelColor: AppColor.purple,
-          unselectedLabelColor: AppColor.gray3,dividerColor:AppColor.background,
-          labelStyle:
-          TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+          isScrollable: isScrollable,
+          indicatorColor: AppColor.textDarkBlue,
+          labelColor: AppColor.textDarkBlue,
+          dividerColor: AppColor.background,
+          unselectedLabelColor: AppColor.gray3,
+          labelStyle: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold,),
           tabs: _tabs,
         ),
       ),
@@ -417,5 +341,9 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_TabBarDelegate old) =>
-      old.pinned != pinned || old._tabs != _tabs;
+      old.pinned != pinned ||
+          old._tabs != _tabs ||
+          old.isScrollable != isScrollable;
 }
+
+

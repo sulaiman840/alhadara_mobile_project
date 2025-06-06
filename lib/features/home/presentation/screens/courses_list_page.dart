@@ -1,5 +1,7 @@
+// lib/features/home/presentation/screens/courses_list_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -7,77 +9,82 @@ import 'package:go_router/go_router.dart';
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-
+import '../../cubit/courses_cubit.dart';
+import '../../cubit/courses_state.dart';
+import '../../data/models/course_model.dart';
 
 class CoursesListPage extends StatefulWidget {
-  const CoursesListPage({Key? key}) : super(key: key);
+  final int departmentId;
+  final String departmentName;
+
+  const CoursesListPage({
+    Key? key,
+    required this.departmentId,
+    required this.departmentName,
+  }) : super(key: key);
 
   @override
   _CoursesListPageState createState() => _CoursesListPageState();
 }
 
 class _CoursesListPageState extends State<CoursesListPage> {
-  final List<Map<String, String>> _courses = [
-    {
-      'image': 'assets/images/English.jpg',
-      'title': 'كورس اللغة الانجليزية للمبتدئين',
-      'subtitle': 'تعلم اساسيات اللغة',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
-    {
-      'image': 'assets/images/English2.jpg',
-      'title': 'كورس متقدم اللغة الانجليزية ',
-      'subtitle': 'مستوى متقدم',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
-    {
-      'image': 'assets/images/English3.jpg',
-      'title': 'كورس محادثة اللغة الانجليزية ',
-      'subtitle': 'محادثة متقدمة',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
-  ];
-
-  late List<bool> _favorites;
-
-  @override
-  void initState() {
-    super.initState();
-    _favorites = List<bool>.filled(_courses.length, false);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final avatarSize = 40.r;
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title: 'قائمة كورسات اللغة الانجليزية',
+          title:'قائمة كورسات ${widget.departmentName}',
           onBack: () => context.go(AppRoutesNames.home),
         ),
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Column(
-              children: [
-                SizedBox(height: 10.h),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: _courses.length,
+            child: BlocBuilder<CoursesCubit, CoursesState>(
+              builder: (context, state) {
+                if (state is CoursesLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is CoursesFailure) {
+                  return Center(
+                    child: Text(
+                      state.errorMessage,
+                      style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }
+                if (state is CoursesSuccess) {
+                  final List<CourseModel> courses = state.courses;
+                  if (courses.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'لا توجد كورسات في هذا القسم',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: AppColor.textDarkBlue,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    itemCount: courses.length,
                     separatorBuilder: (_, __) =>
                         Divider(color: AppColor.gray3, thickness: 0.2.h),
                     itemBuilder: (_, i) {
-                      final c = _courses[i];
-                      return InkWell(
-                        onTap: () {GoRouter.of(context).go(AppRoutesNames.courseDetails);
+                      final c = courses[i];
 
-                          // TODO: navigate to course details
+                      return InkWell(
+                        onTap: () {
+                          GoRouter.of(context).go(
+                            AppRoutesNames.courseDetails,
+                            extra: {
+                              'course': c,
+                              'deptName': widget.departmentName,
+                            },
+                          );
                         },
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -87,22 +94,48 @@ class _CoursesListPageState extends State<CoursesListPage> {
                               // ── Thumbnail on the right
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12.r),
-                                child: Image.asset(
-                                  c['image']!,
+                                child: Image.network(
+                                  'http://192.168.195.198:8000/${c.photo}',
                                   width: 80.w,
                                   height: 80.w,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (ctx, error, stack) => Container(
+                                    width: 80.w,
+                                    height: 80.w,
+                                    color: Colors.grey[200],
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 40.r,
+                                      color: AppColor.gray3,
+                                    ),
+                                  ),
+                                  loadingBuilder: (ctx, child, progress) {
+                                    if (progress == null) return child;
+                                    return Container(
+                                      width: 80.w,
+                                      height: 80.w,
+                                      color: Colors.grey[200],
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          value: progress.expectedTotalBytes != null
+                                              ? progress.cumulativeBytesLoaded /
+                                              (progress.expectedTotalBytes!)
+                                              : null,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               SizedBox(width: 12.w),
-
                               // ── Course info in the middle
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      c['title']!,
+                                      c.name,
                                       style: TextStyle(
                                         fontSize: 16.sp,
                                         fontWeight: FontWeight.w500,
@@ -113,66 +146,27 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      c['subtitle']!,
+                                      c.description,
                                       style: TextStyle(
                                         fontSize: 14.sp,
-                                        color: AppColor.textDarkBlue
-                                            .withValues(alpha: 0.7),
+                                        color: AppColor.textDarkBlue.withOpacity(0.7),
                                       ),
-                                      maxLines: 1,
+                                      maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.access_time,
-                                          size: 14.r,
-                                          color: AppColor.gray3,
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          c['duration']!,
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: AppColor.gray3,
-                                          ),
-                                        ),
-                                        SizedBox(width: 16.w),
-                                        Icon(
-                                          Icons.person,
-                                          size: 14.r,
-                                          color: AppColor.gray3,
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          c['teacher']!,
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: AppColor.gray3,
-                                          ),
-                                        ),
-                                      ],
                                     ),
                                   ],
                                 ),
                               ),
                               SizedBox(width: 12.w),
-
+                              // ── Bookmark/favorite icon if you want:
                               GestureDetector(
                                 onTap: () {
-                                  setState(() {
-                                    _favorites[i] = !_favorites[i];
-                                  });
+                                  // implement “mark as favorite” if needed
                                 },
                                 child: FaIcon(
-                                  _favorites[i]
-                                      ? FontAwesomeIcons.solidBookmark
-                                      : FontAwesomeIcons.bookmark,
+                                  FontAwesomeIcons.bookmark,
                                   size: 20.r,
-                                  color: _favorites[i]
-                                      ? AppColor.purple
-                                      : AppColor.gray3,
+                                  color: AppColor.gray3,
                                 ),
                               ),
                             ],
@@ -180,9 +174,11 @@ class _CoursesListPageState extends State<CoursesListPage> {
                         ),
                       );
                     },
-                  ),
-                ),
-              ],
+                  );
+                }
+                // default:
+                return const SizedBox.shrink();
+              },
             ),
           ),
         ),

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../my_course_details/cubit/my_courses_cubit.dart';
+import '../../../my_course_details/cubit/my_courses_state.dart';
+
 
 class MyCoursesPage extends StatefulWidget {
   const MyCoursesPage({Key? key}) : super(key: key);
@@ -16,42 +20,15 @@ class MyCoursesPage extends StatefulWidget {
 }
 
 class _MyCoursesPageState extends State<MyCoursesPage> {
-  final List<Map<String, String>> _courses = [
-    {
-      'image': 'assets/images/Flutter.png',
-      'title': 'Flutter للمبتدئين',
-      'subtitle': 'تعلم فلاتر من الصفر',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
-    {
-      'image': 'assets/images/laravel.png',
-      'title': 'Laravel متقدمة',
-      'subtitle': 'دورة احتراف Laravel',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
-    {
-      'image': 'assets/images/Germany.jpg',
-      'title': 'لغة ألمانية',
-      'subtitle': 'أساسيات',
-      'duration': '2/5/2025',
-      'teacher': 'ا. احمد علي',
-    },
-  ];
-
-  late List<bool> _favorites;
-
   @override
   void initState() {
     super.initState();
-    _favorites = List<bool>.filled(_courses.length, false);
+    // Trigger load as soon as this page appears
+    context.read<MyCoursesCubit>().fetchMyCourses();
   }
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = 40.r;
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -63,44 +40,78 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Column(
-              children: [
-                SizedBox(height: 10.h),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: _courses.length,
+            child: BlocBuilder<MyCoursesCubit, MyCoursesState>(
+              builder: (context, state) {
+                if (state is MyCoursesLoading || state is MyCoursesInitial) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is MyCoursesFailure) {
+                  return Center(
+                    child: Text(
+                      state.errorMessage,
+                      style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                } else if (state is MyCoursesSuccess) {
+                  final list = state.courses;
+                  if (list.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'لم تقم بالتسجيل في أي كورس بعد',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: AppColor.textDarkBlue,
+                        ),
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    itemCount: list.length,
                     separatorBuilder: (_, __) =>
                         Divider(color: AppColor.gray3, thickness: 0.2.h),
                     itemBuilder: (_, i) {
-                      final c = _courses[i];
+                      final enrolled = list[i];
+                      final imageUrl =
+                          'http://192.168.195.198:8000/${enrolled.course.photo}';
+
                       return InkWell(
-                        onTap: () {GoRouter.of(context).go(AppRoutesNames.myCourseDetails);
-                          // TODO: navigate to course details
+                        onTap: () {
+                          GoRouter.of(context).go(
+                            AppRoutesNames.myCourseDetails,
+                            extra: enrolled,
+                          );
                         },
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // ── Thumbnail on the right
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12.r),
-                                child: Image.asset(
-                                  c['image']!,
+                                child: Image.network(
+                                  imageUrl,
                                   width: 80.w,
                                   height: 80.w,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (ctx, err, stack) => Container(
+                                    width: 80.w,
+                                    height: 80.w,
+                                    color: Colors.grey[200],
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 24.r,
+                                      color: AppColor.gray3,
+                                    ),
+                                  ),
                                 ),
                               ),
                               SizedBox(width: 12.w),
-
-                              // ── Course info in the middle
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      c['title']!,
+                                      enrolled.course.name,
                                       style: TextStyle(
                                         fontSize: 16.sp,
                                         fontWeight: FontWeight.w500,
@@ -111,7 +122,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                     ),
                                     SizedBox(height: 4.h),
                                     Text(
-                                      c['subtitle']!,
+                                      'شعبة: ${enrolled.name}',
                                       style: TextStyle(
                                         fontSize: 14.sp,
                                         color: AppColor.textDarkBlue
@@ -124,27 +135,13 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                     Row(
                                       children: [
                                         Icon(
-                                          Icons.access_time,
+                                          Icons.calendar_today,
                                           size: 14.r,
                                           color: AppColor.gray3,
                                         ),
                                         SizedBox(width: 4.w),
                                         Text(
-                                          c['duration']!,
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            color: AppColor.gray3,
-                                          ),
-                                        ),
-                                        SizedBox(width: 16.w),
-                                        Icon(
-                                          Icons.person,
-                                          size: 14.r,
-                                          color: AppColor.gray3,
-                                        ),
-                                        SizedBox(width: 4.w),
-                                        Text(
-                                          c['teacher']!,
+                                          '${enrolled.startDate.day}/${enrolled.startDate.month}/${enrolled.startDate.year}',
                                           style: TextStyle(
                                             fontSize: 12.sp,
                                             color: AppColor.gray3,
@@ -156,32 +153,17 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                 ),
                               ),
                               SizedBox(width: 12.w),
-
-                              // ── Heart on the left
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _favorites[i] = !_favorites[i];
-                                  });
-                                },
-                                child: FaIcon(
-                                  _favorites[i]
-                                      ? FontAwesomeIcons.solidBookmark
-                                      : FontAwesomeIcons.bookmark,
-                                  size: 20.r,
-                                  color: _favorites[i]
-                                      ? AppColor.purple
-                                      : AppColor.gray3,
-                                ),
-                              ),
+                              FaIcon(FontAwesomeIcons.arrowRight,
+                                  size: 16.r, color: AppColor.gray3),
                             ],
                           ),
                         ),
                       );
                     },
-                  ),
-                ),
-              ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
           ),
         ),

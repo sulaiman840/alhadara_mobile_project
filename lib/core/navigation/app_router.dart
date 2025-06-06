@@ -12,13 +12,22 @@ import '../../features/auth/cubit/verify_cubit.dart';
 import '../../features/complaints/cubit/complaints_cubit.dart';
 import '../../features/complaints/presentation/screens/complaints_page.dart';
 import '../../features/course_details/presentation/screens/test_details_page.dart';
+import '../../features/course_sections/cubit/sections_cubit.dart';
+import '../../features/course_sections/data/datasources/sections_remote_data_source.dart';
+import '../../features/course_sections/data/repositories/sections_repository.dart';
+import '../../features/course_sections/presentation/screens/course_sections_page.dart';
 import '../../features/finished courses/presentation/screens/finished_courses_page.dart';
 import '../../features/gifts/cubit/gifts_cubit.dart';
 import '../../features/gifts/presentation/screens/gifts_page.dart';
+import '../../features/home/cubit/courses_cubit.dart';
+import '../../features/home/cubit/departments_cubit.dart';
 import '../../features/home/cubit/points_cubit.dart';
+import '../../features/home/data/models/course_model.dart';
 import '../../features/languages/presentation/screens/language_selection_page.dart';
 import '../../features/menu/cubit/logout_cubit/logout_cubit.dart';
 import '../../features/menu/presentation/screens/menu_page.dart';
+import '../../features/my_course_details/cubit/my_courses_cubit.dart';
+import '../../features/my_course_details/data/models/enrolled_course_model.dart';
 import '../../features/my_course_details/presentation/screens/my_test_details_page.dart';
 import '../../features/notifications/presentation/screens/notifications_page.dart';
 import '../../features/profile/presentation/screens/profile_page.dart';
@@ -44,9 +53,12 @@ import '../../features/forum/presentation/screens/forum_detail_page.dart';
 import '../../features/test_results/cubit/grades_cubit.dart';
 import '../../features/test_results/presentation/screens/test_results_page.dart';
 import '../../features/theme_mode/presentation/screens/theme_mode_selection_page.dart';
+import '../../features/trainers/cubit/trainers_cubit.dart';
+import '../../features/trainers/data/models/trainer_with_course_model.dart';
 import '../../features/trainers/presentation/screens/trainer_details_page.dart';
 import '../../features/trainers/presentation/screens/trainers_page.dart';
 import '../injection.dart';
+import '../network/dio_client.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -113,7 +125,12 @@ class AppRouter {
                     BlocProvider<PointsCubit>(
                       create: (_) => getIt<PointsCubit>()..loadPoints(),
                     ),
-
+                    BlocProvider<DepartmentsCubit>(
+                      create: (_) => getIt<DepartmentsCubit>()..fetchDepartments(),
+                    ),
+                    BlocProvider<MyCoursesCubit>(
+                      create: (_) => getIt<MyCoursesCubit>()..fetchMyCourses(),
+                    ),
                     // If HomePage also needs GiftsCubit for “recent gifts” or something:
 
                   ],
@@ -146,12 +163,14 @@ class AppRouter {
             path: AppRoutesNames.trainers,
             pageBuilder: (ctx, state) => CustomTransitionPage(
               key: state.pageKey,
-              child: const TrainersPage(),
+              child: BlocProvider<TrainersCubit>(
+                create: (_) => getIt<TrainersCubit>()..fetchAll(),
+                child: const TrainersPage(),
+              ),
               transitionDuration: Duration.zero,
               transitionsBuilder: (_, __, ___, child) => child,
             ),
-          ),
-          GoRoute(
+          ),         GoRoute(
             path: AppRoutesNames.menu_page,
             pageBuilder: (ctx, state) => CustomTransitionPage(
               key: state.pageKey,
@@ -247,19 +266,98 @@ class AppRouter {
 
       GoRoute(
         path: AppRoutesNames.myCourses,
-        builder: (context, state) => const MyCoursesPage(),
-      ),
-      GoRoute(
-        path: AppRoutesNames.coursesList,
-        builder: (context, state) => const CoursesListPage(),
+        pageBuilder: (context, state) {
+          // Make sure MyCoursesPage has its own MyCoursesCubit as well:
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BlocProvider<MyCoursesCubit>(
+              create: (_) => getIt<MyCoursesCubit>()..fetchMyCourses(),
+              child: const MyCoursesPage(),
+            ),
+            transitionDuration: Duration.zero,
+            transitionsBuilder: (_, __, ___, child) => child,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.myCourseDetails,
-        builder: (context, state) => const MyCourseDetailsPage(),
+        pageBuilder: (context, state) {
+          // we expect `extra` to be an EnrolledCourseModel:
+          final enrolled = state.extra as EnrolledCourseModel;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: MyCourseDetailsPage(enrolled: enrolled),
+            transitionDuration: Duration.zero,
+            transitionsBuilder: (_, __, ___, child) => child,
+          );
+        },
       ),
+
+      GoRoute(
+        path: AppRoutesNames.coursesList,
+        pageBuilder: (context, state) {
+          final args     = state.extra as Map<String, dynamic>;
+          final int  deptId   = args['id']   as int;
+          final String deptName = args['name'] as String;
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BlocProvider<CoursesCubit>(
+              create: (_) => getIt<CoursesCubit>()..fetchCourses(deptId),
+              child: CoursesListPage(
+                departmentId:   deptId,
+                departmentName: deptName,
+              ),
+            ),
+            transitionDuration: Duration.zero,
+            transitionsBuilder: (_, __, ___, child) => child,
+          );
+        },
+      ),
+
+
       GoRoute(
         path: AppRoutesNames.courseDetails,
-        builder: (context, state) => const CourseDetailsPage(),
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          final course   = args['course']   as CourseModel;
+          final deptName = args['deptName'] as String;
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: CourseDetailsPage(
+              course:     course,
+              deptName:   deptName,
+            ),
+            transitionDuration: Duration.zero,
+            transitionsBuilder: (_, __, ___, child) => child,
+          );
+        },
+      ),
+
+      GoRoute(
+        path: AppRoutesNames.pendingSections,
+        pageBuilder: (context, state) {
+          // We expect that “extra” is a Map<String, dynamic> containing:
+          //   'course': CourseModel
+          //   'deptName': String
+          final args = state.extra as Map<String, dynamic>;
+          final course = args['course'] as CourseModel;
+          final deptName = args['deptName'] as String;
+
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BlocProvider<SectionsCubit>(
+              create: (_) => getIt<SectionsCubit>()..fetchSections(course.id),
+              child: SectionsPage(
+                course: course,
+                deptName: deptName,
+              ),
+            ),
+            transitionDuration: Duration.zero,
+            transitionsBuilder: (_, __, ___, child) => child,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutesNames.fourm,
@@ -331,7 +429,10 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutesNames.trainersDetails,
-        builder: (_, __) =>  TrainerDetailsPage(),
+        builder: (_, state) {
+          final trainerWithCourse = state.extra as TrainerWithCourse;
+          return TrainerDetailsPage(trainerWithCourse: trainerWithCourse);
+        },
       ),
       GoRoute(
         path: AppRoutesNames.testDetails,

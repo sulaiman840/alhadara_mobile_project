@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,20 +7,18 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../my_course_details/cubit/my_courses_cubit.dart';
+import '../../../my_course_details/cubit/my_courses_state.dart';
 import '../../cubit/points_cubit.dart';
 import '../../cubit/points_state.dart';
-
+import '../../cubit/departments_cubit.dart';
+import '../../cubit/departments_state.dart';
+import '../../data/models/department_model.dart';
 
 class _Course {
   final String image;
   final String title;
   const _Course({required this.image, required this.title});
-}
-
-class _Category {
-  final String label;
-  final IconData icon;
-  const _Category({required this.label, required this.icon});
 }
 
 class HomePage extends StatefulWidget {
@@ -30,21 +29,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  // Data
-  final List<_Course> _myCourses = const [
-    _Course(image: 'assets/images/Flutter.png', title: 'Flutter للمبتدئين'),
-    _Course(image: 'assets/images/laravel.png', title: 'Laravel متقدمة'),
-    _Course(image: 'assets/images/Germany.jpg', title: 'لغة ألمانية'),
-  ];
-
-  final List<_Category> _categories = const [
-    _Category(label: 'الطبخ', icon: FontAwesomeIcons.utensils),
-    _Category(label: 'البرمجة', icon: FontAwesomeIcons.code),
-    _Category(label: 'اللغة الإنجليزية', icon: FontAwesomeIcons.language),
-    _Category(label: 'اللغة الألمانية', icon: FontAwesomeIcons.language),
-    _Category(label: 'السياحة', icon: FontAwesomeIcons.planeArrival),
-    _Category(label: 'التصميم', icon: FontAwesomeIcons.paintBrush),
-  ];
 
   final List<_Course> _suggested = const [
     _Course(image: 'assets/images/programming.jpg', title: 'مبادئ البرمجة'),
@@ -53,30 +37,35 @@ class _HomePageState extends State<HomePage> {
     _Course(image: 'assets/images/tourism.jpg', title: 'مبادئ السياحة'),
     _Course(image: 'assets/images/Adobe.png', title: 'كورس التصميم'),
   ];
+
   @override
   void initState() {
     super.initState();
-    // We assume PointsCubit (and any other Cubits) have already been provided
-    // by the router, so here we just tell it to load.
+    // PointsCubit and DepartmentsCubit are already provided at the route level,
+    // so here we just trigger their loading if not done in router.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PointsCubit>().loadPoints();
+      context.read<DepartmentsCubit>().fetchDepartments();
+      context.read<MyCoursesCubit>().fetchMyCourses();
 
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(   appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80.h),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w,vertical: 20.h),
-            child: _buildHeader(),
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(80.h),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+              child: _buildHeader(),
+            ),
           ),
         ),
-      ),
         backgroundColor: AppColor.background,
         body: SafeArea(
           child: Padding(
@@ -89,7 +78,9 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 16.h),
                   _buildPointsCapsule(),
                   SizedBox(height: 16.h),
-                  _buildCategoryChips(),
+                  _buildSectionTitle('قائمة الأقسام'),
+                  SizedBox(height: 12.h),
+                  _buildDepartmentChips(),
                   SizedBox(height: 24.h),
                   _buildSectionTitle('قائمة كورساتي'),
                   SizedBox(height: 12.h),
@@ -120,16 +111,19 @@ class _HomePageState extends State<HomePage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        Spacer(),
+        const Spacer(),
         _buildCircleIconButton(
           icon: FontAwesomeIcons.solidBell,
-          onTap: () {GoRouter.of(context).go(AppRoutesNames.notifications);
+          onTap: () {
+            GoRouter.of(context).go(AppRoutesNames.notifications);
           },
         ),
         SizedBox(width: 12.w),
         _buildCircleAvatar(
           imagePath: 'assets/images/man.png',
-          onTap: () {GoRouter.of(context).go(AppRoutesNames.profile);}, // TODO: profile
+          onTap: () {
+            GoRouter.of(context).go(AppRoutesNames.profile);
+          },
         ),
       ],
     );
@@ -212,7 +206,10 @@ class _HomePageState extends State<HomePage> {
             child: SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             ),
           );
         } else if (state is PointsFailure) {
@@ -225,7 +222,11 @@ class _HomePageState extends State<HomePage> {
         } else if (state is PointsSuccess) {
           rightSide = Text(
             '${state.points} نقطة',
-            style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w500,
+            ),
           );
         } else {
           rightSide = const SizedBox.shrink();
@@ -245,12 +246,16 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     SizedBox(width: 10.w),
-                    FaIcon(FontAwesomeIcons.graduationCap, color: Colors.white, size: 20.r),
+                    FaIcon(FontAwesomeIcons.graduationCap,
+                        color: Colors.white, size: 20.r),
                     SizedBox(width: 8.w),
                     Text(
                       'نقاطك الحالية',
-                      style:
-                      TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -270,37 +275,119 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-  Widget _buildCategoryChips() {
-    return SizedBox(
-      height: 48.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        separatorBuilder: (_, __) => SizedBox(width: 12.w),
-        itemBuilder: (_, i) {
-          final cat = _categories[i];
-          return GestureDetector(
-            // onTap: () => context.go('${AppRoutesNames.categories}/${cat.label}'),
-            onTap: () {  GoRouter.of(context).go(AppRoutesNames.coursesList);
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24.r),
-                border: Border.all(color: AppColor.gray3),
+
+  /// ─── NEW: Build a horizontal list of department chips ─────────────────
+  Widget _buildDepartmentChips() {
+    return BlocBuilder<DepartmentsCubit, DepartmentsState>(
+      builder: (context, state) {
+        if (state is DepartmentsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is DepartmentsFailure) {
+          return Center(
+            child: Text(
+              state.errorMessage,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColor.textDarkBlue,
               ),
-              child: Row(
-                children: [
-                  FaIcon(cat.icon, size: 18.r, color: AppColor.purple),
-                  SizedBox(width: 8.w),
-                  Text(cat.label, style: TextStyle(fontSize: 14.sp, color: AppColor.textDarkBlue)),
-                ],
-              ),
+              textAlign: TextAlign.center,
             ),
           );
-        },
-      ),
+        }
+        if (state is DepartmentsSuccess) {
+          final List<DepartmentModel> list = state.departments;
+          if (list.isEmpty) {
+            return Center(
+              child: Text(
+                'لا توجد أقسام حتى الآن',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColor.textDarkBlue,
+                ),
+              ),
+            );
+          }
+          return SizedBox(
+            height: 80.h,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: list.length,
+              separatorBuilder: (_, __) => SizedBox(width: 12.w),
+              itemBuilder: (_, i) {
+                final dep = list[i];
+                // Full URL for department photo:
+                final imageUrl =
+                    'http://192.168.195.198:8000/${dep.photo}';
+                return GestureDetector(
+                  onTap: () {
+                    GoRouter.of(context).go(
+                      AppRoutesNames.coursesList,
+                      extra: {'id': dep.id, 'name': dep.name},
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(24.r),
+                        child: Image.network(
+                          imageUrl,
+                          width: 55.r,
+                          height: 48.r,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, error, stack) => Container(
+                            width: 48.r,
+                            height: 48.r,
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 24.r,
+                              color: AppColor.gray3,
+                            ),
+                          ),
+                          loadingBuilder: (ctx, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              width: 48.r,
+                              height: 48.r,
+                              color: Colors.grey[200],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  value: progress.expectedTotalBytes != null
+                                      ? progress.cumulativeBytesLoaded /
+                                      (progress.expectedTotalBytes!)
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      SizedBox(
+                        width: 80.w,
+                        child: Text(
+                          dep.name,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColor.textDarkBlue,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        }
+        // default:
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -309,65 +396,53 @@ class _HomePageState extends State<HomePage> {
       alignment: Alignment.centerRight,
       child: Text(
         title,
-        style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColor.textDarkBlue),
+        style: TextStyle(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.bold,
+          color: AppColor.textDarkBlue,
+        ),
       ),
     );
   }
 
-  Widget _buildMyCoursesCarousel() {
-    return SizedBox(
-      height: 160.h,
-      child: Stack(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(left: 45.w),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _myCourses.length,
-              separatorBuilder: (_, __) => SizedBox(width: 12.w),
-              itemBuilder: (_, i) {
-                final c = _myCourses[i];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: Image.asset(c.image, width: 120.w, height: 120.h, fit: BoxFit.cover),
-                    ),
-                    SizedBox(height: 8.h),
-                    SizedBox(
-                      width: 120.w,
-                      child: Text(c.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColor.textDarkBlue,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                          )),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back_ios, size: 20.r),
-              onPressed: () {      GoRouter.of(context).go(AppRoutesNames.myCourses,);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  Widget _buildMyCoursesCarousel() => BlocBuilder<MyCoursesCubit, MyCoursesState>(
+      builder:(c,s){
+        if (s is MyCoursesLoading || s is MyCoursesInitial) return Center(child:CircularProgressIndicator());
+        if (s is MyCoursesFailure) return Center(child:Text(s.errorMessage, style:TextStyle(fontSize:14.sp, color:Colors.red), textAlign:TextAlign.center));
+        if (s is MyCoursesSuccess) {
+          final list=s.courses;
+          if (list.isEmpty) return Center(child:Text('لم تقم بالتسجيل في أي كورس بعد',style:TextStyle(fontSize:14.sp,color:AppColor.textDarkBlue)));
+          return SizedBox(
+              height:160.h,
+              child: Stack(children:[
+                Padding(padding:EdgeInsets.only(left:45.w),child:ListView.separated(
+                    scrollDirection:Axis.horizontal,
+                    itemCount: list.length,
+                    separatorBuilder:(_,__)=>SizedBox(width:12.w),
+                    itemBuilder:(_,i){
+                      final e=list[i];
+                      final img='http://192.168.195.198:8000/${e.course.photo}';
+                      return GestureDetector(
+                          onTap:()=>GoRouter.of(context).go(AppRoutesNames.myCourseDetails, extra:e),
+                          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                            ClipRRect(borderRadius:BorderRadius.circular(12.r),child:Image.network(img,width:120.w,height:120.h,fit:BoxFit.cover)),
+                            SizedBox(height:8.h),
+                            SizedBox(width:120.w,child:Text(e.course.name,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:AppColor.textDarkBlue,fontSize:14.sp,fontWeight:FontWeight.w500))),
+                          ])
+                      );
+                    }
+                )),
+                Align(alignment:Alignment.centerLeft,child:IconButton(icon:Icon(Icons.arrow_back_ios,size:20.r),onPressed:()=>GoRouter.of(context).go(AppRoutesNames.myCourses)))
+              ])
+          );
+        }
+        return SizedBox.shrink();
+      }
+  );
   Widget _buildSuggestedGrid() {
     return GridView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       itemCount: _suggested.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -407,6 +482,4 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-
 }

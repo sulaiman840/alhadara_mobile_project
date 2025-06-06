@@ -31,6 +31,7 @@ class AppRoutesNames {
   static const complaints = '/complaints';
   static const trainers = '/trainers';
   static const trainersDetails = '/trainersDetails';
+  static const String pendingSections = '/pendingSections';
   static const testDetails = '/testDetails';
   static const myTestDetails = '/myTestDetails';
 
