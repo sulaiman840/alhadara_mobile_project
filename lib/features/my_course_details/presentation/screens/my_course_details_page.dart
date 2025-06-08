@@ -1,12 +1,23 @@
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/injection.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/pdf_viewer_page.dart';
+import '../../cubit/section_files_cubit.dart';
+import '../../cubit/section_files_state.dart';
 import '../../data/models/enrolled_course_model.dart';
 
 class MyCourseDetailsPage extends StatefulWidget {
@@ -246,8 +257,10 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
                   child: TabBarView(
                     children: [
                       CourseInfoTab(description: course.description),
-                      HomeworkTab(),
-                      TestsTab(),
+                      BlocProvider<SectionFilesCubit>(
+                        create: (_) => getIt<SectionFilesCubit>()..fetchFiles(widget.enrolled.id),
+                        child: HomeworkTab(sectionId: widget.enrolled.id),
+                      ),                      TestsTab(),
                     ],
                   ),
                 ),
@@ -342,72 +355,109 @@ class CourseInfoTab extends StatelessWidget {
 }
 
 /// Tab 2: homework assignments as a PDF list
-class HomeworkTab extends StatelessWidget {
-  const HomeworkTab({Key? key}) : super(key: key);
 
-  // Fake data for a beginner Flutter course
-  final List<Map<String, String>> _homeworks = const [
-    {
-      'title': 'واجب 1: تثبيت Flutter وإعداد البيئة',
-      'file': 'assets/homeworks/assignment1.pdf',
-      'date': '2025-04-01',
-    },
-    {
-      'title': 'واجب 2: إنشاء أول Widget',
-      'file': 'assets/homeworks/assignment2.pdf',
-      'date': '2025-04-08',
-    },
-    {
-      'title': 'واجب 3: التنقل بين الصفحات',
-      'file': 'assets/homeworks/assignment3.pdf',
-      'date': '2025-04-15',
-    },
-  ];
+// …
+
+
+class HomeworkTab extends StatelessWidget {
+  final int sectionId;
+  const HomeworkTab({Key? key, required this.sectionId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
-      itemCount: _homeworks.length,
-      separatorBuilder: (_, __) => Divider(color: AppColor.gray3.withValues( alpha: 0.3)),
-      itemBuilder: (context, i) {
-        final hw = _homeworks[i];
-        return ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: FaIcon(
-            FontAwesomeIcons.solidFilePdf,
-            size: 28.r,
-            color: Colors.redAccent,
-          ),
-          title: Text(
-            hw['title']!,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-              color: AppColor.textDarkBlue,
-            ),
-          ),
-          subtitle: Text(
-            'تاريخ التسليم: ${hw['date']}',
-            style: TextStyle(fontSize: 12.sp, color: AppColor.gray3),
-          ),
-          trailing: IconButton(
-            icon: FaIcon(FontAwesomeIcons.download, size: 20.r),
-            onPressed: () {
-              // TODO: open or download hw['file']
-            },
-          ),
-          onTap: () {
-            // TODO: preview the PDF in‐app
+    return BlocBuilder<SectionFilesCubit, SectionFilesState>(
+      builder: (ctx, state) {
+        if (state is SectionFilesLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is SectionFilesError) {
+          return Center(child: Text(state.message));
+        }
+        final files = (state as SectionFilesLoaded).files;
+        if (files.isEmpty) {
+          return const Center(child: Text('لا يوجد واجبات حالياً'));
+        }
+        return ListView.separated(
+          padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
+          itemCount: files.length,
+          separatorBuilder: (_, __) =>
+              Divider(color: AppColor.gray3.withOpacity(0.3)),
+          itemBuilder: (_, i) {
+            final f = files[i];
+            final url = 'http://192.168.195.198:8000/${f.filePath}';
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: FaIcon(
+                FontAwesomeIcons.solidFilePdf,
+                size: 28.r,
+                color: Colors.redAccent,
+              ),
+              title: Text(
+                f.fileName,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColor.textDarkBlue,
+                ),
+              ),
+              subtitle: Text(
+                'تاريخ الإنشاء: ${f.createdAt.day}/${f.createdAt.month}/${f.createdAt.year}',
+                style: TextStyle(fontSize: 12.sp, color: AppColor.gray3),
+              ),
+              trailing:
+              IconButton(
+                icon: const Icon(Icons.download_rounded),
+                tooltip: 'تنزيل الـ PDF',
+                onPressed: () async {
+                  // PERMISSION
+                  final status = await Permission.storage.request();
+                  if (!status.isGranted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('لم يتم منح إذن الكتابة')),
+                    );
+                    return;
+                  }
+
+                  // URL to download
+                  final url = 'http://192.168.195.198:8000/${f.filePath}';
+
+                  // GET (or create) the Download folder
+                  final baseDir = await getExternalStorageDirectory();
+                  final downloadsDir = Directory('${baseDir!.path}/Download');
+                  if (!downloadsDir.existsSync()) {
+                    await downloadsDir.create(recursive: true);
+                  }
+
+                  // START download
+                  final taskId = await FlutterDownloader.enqueue(
+                    url: url,
+                    savedDir: downloadsDir.path,
+                    fileName: f.fileName,
+                    showNotification: true,
+                    openFileFromNotification: true,
+                  );
+
+                  if (taskId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تعذّر بدء التنزيل')),
+                    );
+                  }
+                },
+              ),
+              onTap: () => _openPdf(context, url),
+            );
           },
         );
       },
     );
   }
-}
 
-
-/// Tab 3: الاختبارات
+  void _openPdf(BuildContext context, String url) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PdfViewerPage(url: url)),
+    );
+  }
+}/// Tab 3: الاختبارات
 class TestsTab extends StatefulWidget {
   const TestsTab({Key? key}) : super(key: key);
   @override

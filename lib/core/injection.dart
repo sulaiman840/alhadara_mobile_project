@@ -26,8 +26,11 @@ import '../features/home/data/repositories/departments_repository.dart';
 import '../features/home/data/repositories/points_repository.dart';
 import '../features/menu/cubit/logout_cubit/logout_cubit.dart';
 import '../features/my_course_details/cubit/my_courses_cubit.dart';
+import '../features/my_course_details/cubit/section_files_cubit.dart';
 import '../features/my_course_details/data/datasources/my_courses_remote_data_source.dart';
+import '../features/my_course_details/data/datasources/section_files_remote_data_source.dart';
 import '../features/my_course_details/data/repositories/my_courses_repository.dart';
+import '../features/my_course_details/data/repositories/section_files_repository.dart';
 import '../features/test_results/cubit/grades_cubit.dart';
 import '../features/test_results/data/datasources/grades_remote_data_source.dart';
 import '../features/test_results/data/repositories/grades_repository.dart';
@@ -187,6 +190,16 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<TrainersCubit>(
         () => TrainersCubit(getIt<TrainersRepository>()),
+  );
+  //////////////////
+  getIt.registerLazySingleton<SectionFilesRemoteDataSource>(
+        () => SectionFilesRemoteDataSourceImpl(getIt<Dio>()),
+  );
+  getIt.registerLazySingleton<SectionFilesRepository>(
+        () => SectionFilesRepositoryImpl(getIt<SectionFilesRemoteDataSource>()),
+  );
+  getIt.registerFactory<SectionFilesCubit>(
+        () => SectionFilesCubit(getIt<SectionFilesRepository>()),
   );
   //////////////////
 
