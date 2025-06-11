@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../home/data/models/course_model.dart';
 
@@ -75,7 +76,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.r),
                     child: Image.network(
-                      'http://192.168.195.198:8000/${widget.course.photo}',
+                      '${ConstString.baseURl}${widget.course.photo}',
                       width: double.infinity,
                       height: 300.h,
                       fit: BoxFit.contain,

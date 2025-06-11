@@ -14,8 +14,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/injection.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/pdf_viewer_page.dart';
+import '../../cubit/quiz_cubit.dart';
+import '../../cubit/quiz_state.dart';
 import '../../cubit/section_files_cubit.dart';
 import '../../cubit/section_files_state.dart';
 import '../../data/models/enrolled_course_model.dart';
@@ -60,7 +63,7 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
 
     // Banner URL or placeholder
     final bannerUrl = course.photo.isNotEmpty
-        ? 'http://192.168.195.198:8000/${course.photo}'
+        ? '${ConstString.baseURl}${course.photo}'
         : null;
 
     return Directionality(
@@ -109,7 +112,7 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
                       height: forumPx,
                       child: OutlinedButton(
                         onPressed: () {
-                          context.go(AppRoutesNames.fourm);
+                          context.go('/forum/${widget.enrolled.id}');
                         },
                         style: OutlinedButton.styleFrom(
                           backgroundColor: AppColor.purple,
@@ -260,7 +263,11 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
                       BlocProvider<SectionFilesCubit>(
                         create: (_) => getIt<SectionFilesCubit>()..fetchFiles(widget.enrolled.id),
                         child: HomeworkTab(sectionId: widget.enrolled.id),
-                      ),                      TestsTab(),
+                      ),
+                      BlocProvider<QuizCubit>(
+                        create: (_) => getIt<QuizCubit>()..fetchQuizzes(widget.enrolled.id),
+                        child: TestsTab(sectionId: widget.enrolled.id),
+                      ),
                     ],
                   ),
                 ),
@@ -384,7 +391,7 @@ class HomeworkTab extends StatelessWidget {
               Divider(color: AppColor.gray3.withOpacity(0.3)),
           itemBuilder: (_, i) {
             final f = files[i];
-            final url = 'http://192.168.195.198:8000/${f.filePath}';
+            final url = '${ConstString.baseURl}${f.filePath}';
             return ListTile(
               contentPadding: EdgeInsets.zero,
               leading: FaIcon(
@@ -457,172 +464,215 @@ class HomeworkTab extends StatelessWidget {
       MaterialPageRoute(builder: (_) => PdfViewerPage(url: url)),
     );
   }
-}/// Tab 3: الاختبارات
+}
+/// Tab 3: الاختبارات
+
+
 class TestsTab extends StatefulWidget {
-  const TestsTab({Key? key}) : super(key: key);
+  final int sectionId;
+  const TestsTab({Key? key, required this.sectionId}) : super(key: key);
+
   @override
   _TestsTabState createState() => _TestsTabState();
 }
 
 class _TestsTabState extends State<TestsTab> {
-  final List<Map<String, dynamic>> _tests = [
-    {
-      'title': 'اختبار الوحدة الأولى',
-      'questions': [
-        {
-          'text': 'ما هي لغة برمجة Flutter؟',
-          'options': [
-            'لغة لإنشاء تطبيقات الويب',
-            'إطار عمل لتطوير واجهات المستخدم',
-            'قاعدة بيانات NoSQL',
-            'محرك لعبة ثلاثية الأبعاد',
-          ],
-        },
-        {
-          'text': 'أي ويدجت يستخدم لإظهار نص ثابت؟',
-          'options': ['Text', 'Column', 'Row', 'Container'],
-        },
-      ],
-    },
-    {
-      'title': 'اختبار الوحدة الثانية',
-      'questions': [
-        {
-          'text': 'كيف نغيّر الحالة داخل StatefulWidget؟',
-          'options': [
-            'باستخدام Provider',
-            'من خلال setState',
-            'باستخدام Bloc',
-            'لا يمكن تغييرها',
-          ],
-        },
-        {
-          'text': 'أي من هذه ليست خاصية لـ Container؟',
-          'options': ['padding', 'margin', 'color', 'onPressed'],
-        },
-      ],
-    },
-  ];
-
-  late List<List<int?>> _selectedAnswers;
-  late List<bool> _expanded;
-  late List<bool> _confirmed;
+  /// Tracks each question's selected option
+  final Map<int, int?> _selected = {};
+  /// Tracks each question's confirmed state
+  final Map<int, bool> _confirmed = {};
 
   @override
   void initState() {
     super.initState();
-    _expanded = List<bool>.filled(_tests.length, false);
-    _confirmed = List<bool>.filled(_tests.length, false);
-    _selectedAnswers = _tests
-        .map((t) => List<int?>.filled((t['questions'] as List).length, null))
-        .toList();
+    context.read<QuizCubit>().fetchQuizzes(widget.sectionId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-      itemCount: _tests.length,
-      itemBuilder: (context, testIdx) {
-        final test = _tests[testIdx];
-        return Card(
-          elevation: 2,color: AppColor.purple,
-          margin: EdgeInsets.only(bottom: 16.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
-          child: ExpansionTile(
-            key: Key('test_$testIdx'),
-            title: Text(
-              test['title'] as String,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColor.white,
-              ),
+    return BlocConsumer<QuizCubit, QuizState>(
+      listener: (ctx, state) {
+        if (state is QuizAnswerResult) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.result.isCorrect ? '✅ صحيح!' : '❌ خطأ!'),
             ),
-            initiallyExpanded: _expanded[testIdx],
-            onExpansionChanged: (open) {
-              setState(() => _expanded[testIdx] = open);
-            },
-            children: [
-              ...List.generate((test['questions'] as List).length, (qIdx) {
-                final q = (test['questions'] as List)[qIdx] as Map<String, dynamic>;
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'السؤال ${qIdx + 1}: ${q['text']}',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          color:AppColor.white,
+          );
+        }
+      },
+      builder: (ctx, state) {
+        if (state is QuizLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is QuizError) {
+          return Center(child: Text(state.message));
+        }
+        if (state is QuizLoaded) {
+          final quizzes = state.quizzes;
+
+          // Ensure every question has an entry in our maps
+          for (var quiz in quizzes) {
+            for (var q in quiz.questions) {
+              _selected.putIfAbsent(q.id, () => null);
+              _confirmed.putIfAbsent(q.id, () => false);
+            }
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            itemCount: quizzes.length,
+            itemBuilder: (context, quizIdx) {
+              final quiz = quizzes[quizIdx];
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                margin: EdgeInsets.only(bottom: 24.h),
+                elevation: 4,
+                child: ExpansionTile(
+                  backgroundColor: AppColor.purple,
+                  collapsedBackgroundColor: AppColor.purple,
+                  title: Text(
+                    quiz.title,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  children: quiz.questions.map((q) {
+                    final sel = _selected[q.id];
+                    final conf = _confirmed[q.id]!;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 8.h),
+                      child: Card(color: AppColor.purple2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        elevation: 2,
+                        child: Padding(
+                          padding: EdgeInsets.all(12.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                q.question,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColor.textDarkBlue,
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+
+                              // Options
+                              ...q.options.map((opt) {
+                                Color bg = AppColor.white;
+                                if (conf) {
+                                  if (opt.isCorrect) {
+                                    bg = AppColor.green;
+                                  } else if (sel == opt.id) {
+                                    bg = AppColor.red;
+                                  }
+                                }
+                                return Card(
+                                  color: bg,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  child: RadioListTile<int>(
+                                    value: opt.id,
+                                    groupValue: sel,
+                                    onChanged: conf
+                                        ? null
+                                        : (v) => setState(() {
+                                      _selected[q.id] = v;
+                                    }),
+                                    title: Text(opt.optionText,
+                                        style: TextStyle(color: AppColor.textDarkBlue,fontSize: 14.sp)),
+                                  ),
+                                );
+                              }).toList(),
+
+                              SizedBox(height: 8.h),
+
+                              // Confirm & Retry buttons
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: !conf && sel != null
+                                          ? () => setState(
+                                              () => _confirmed[q.id] = true)
+                                          : null,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColor.textDarkBlue,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(24.r),
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 12.h),
+                                      ),
+                                      child: Text(
+                                        'تأكيد',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: conf
+                                          ? () => setState(() {
+                                        _selected[q.id] = null;
+                                        _confirmed[q.id] = false;
+                                      })
+                                          : null,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColor.purple,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(24.r),
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 12.h),
+                                      ),
+                                      child: Text(
+                                        'إعادة',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      SizedBox(height: 8.h),
-                      ...List.generate((q['options'] as List).length, (optIdx) {
-                        final option = (q['options'] as List)[optIdx] as String;
-                        return RadioListTile<int>(
-                          contentPadding: EdgeInsets.zero,
-                          value: optIdx,
-                          groupValue: _selectedAnswers[testIdx][qIdx],
-                          onChanged: _confirmed[testIdx]
-                              ? null
-                              : (v) => setState(() {
-                            _selectedAnswers[testIdx][qIdx] = v;
-                          }),
-                          title: Text(
-                            option,
-                            style: TextStyle(fontSize: 14.sp, color: AppColor.white,),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                );
-              }),
-              SizedBox(height: 8.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _confirmed[testIdx]
-                        ? null
-                        : () {
-                      final answers = _selectedAnswers[testIdx];
-                      if (answers.any((a) => a == null)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('من فضلك اختر إجابة لكل سؤال.')),
-                        );
-                        return;
-                      }
-                      setState(() => _confirmed[testIdx] = true);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('تم تأكيد إجاباتك.')),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
-                    ),
-                    child: Text(
-                      _confirmed[testIdx] ? 'تم التأكيد' : 'تأكيد الإجابات',
-                      style: TextStyle(color:AppColor.textDarkBlue, fontSize: 14.sp),
-                    ),
-                  ),
+                    );
+                  }).toList(),
                 ),
-              ),
-              SizedBox(height: 12.h),
-            ],
-          ),
-        );
+              );
+            },
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }
 }
+
 
 
 

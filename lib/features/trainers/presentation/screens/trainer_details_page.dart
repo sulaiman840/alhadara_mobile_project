@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../data/models/trainer_with_course_model.dart';
 
@@ -21,10 +22,10 @@ class TrainerDetailsPage extends StatelessWidget {
     final c = trainerWithCourse.course;
     // build full URLs or fall back to placeholder asset
     final photoUrl = t.photo != null
-        ? 'http://192.168.195.198:8000/${t.photo}'
+        ? '${ConstString.baseURl}${t.photo}'
         : 'assets/images/placeholder.png';
     final courseImageUrl = c.photo.isNotEmpty
-        ? 'http://192.168.195.198:8000/${c.photo}'
+        ? '${ConstString.baseURl}${c.photo}'
         : 'assets/images/placeholder.png';
     // format the created date as “duration”
     final duration = '${c.createdAt.day}/${c.createdAt.month}/${c.createdAt.year}';

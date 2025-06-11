@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/injection.dart';
+import '../../../../core/utils/const.dart';
 import '../../data/models/gift_model.dart';
 import '../../cubit/gifts_cubit.dart';
 import '../../cubit/gifts_state.dart';
@@ -114,7 +115,7 @@ class GiftCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasPhoto = gift.photo != null && gift.photo!.isNotEmpty;
     final imageUrl = hasPhoto
-        ? 'http://192.168.195.198:8000/${gift.photo}'
+        ? '${ConstString.baseURl}${gift.photo}'
         : null;
 
     return Container(

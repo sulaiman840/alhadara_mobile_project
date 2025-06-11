@@ -13,8 +13,8 @@ class AppRoutesNames {
   static const String coursesList = '/coursesList';
   static const String myCourseDetails = '/myCourseDetails';
   static const String courseDetails = '/courseDetails';
-  static const String fourm =  '/forum';
-  static const String fourmDetail = '/forum/detail';
+  static const forum       = '/forum/:sectionId';
+  static const forumDetail = '/forum/:sectionId/question/:questionId';
   static const activity = '/activity';
   static const calendar = '/calendar';
   static const search = '/search';

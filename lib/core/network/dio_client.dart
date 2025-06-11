@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/const.dart';
+
 class DioClient {
   static final DioClient _instance = DioClient._internal();
   late final Dio dio;
@@ -9,7 +11,7 @@ class DioClient {
 
   DioClient._internal() {
     dio = Dio(BaseOptions(
-      baseUrl: 'http://192.168.195.198:8000/',
+      baseUrl: ConstString.baseURl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 15),
       headers: {'Content-Type': 'application/json'},

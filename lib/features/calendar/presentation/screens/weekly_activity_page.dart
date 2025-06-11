@@ -1,40 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
-import '../../../../core/navigation/routes_names.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import 'package:alhadara_mobile_project/shared/widgets/custom_app_bar.dart';
+import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
+import 'package:alhadara_mobile_project/features/calendar/cubit/schedule_cubit.dart';
+import 'package:alhadara_mobile_project/features/calendar/cubit/schedule_state.dart';
+
+import '../../../../core/utils/const.dart';
 
 class WeeklyActivityPage extends StatefulWidget {
   const WeeklyActivityPage({Key? key}) : super(key: key);
 
   @override
-  _WeeklyActivityPageState createState() => _WeeklyActivityPageState();
+  State<WeeklyActivityPage> createState() => _WeeklyActivityPageState();
 }
 
 class _WeeklyActivityPageState extends State<WeeklyActivityPage> {
-  final _days = ['سبت', 'أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة'];
-  int _selectedDayIndex = DateTime.now().weekday % 7; // السبت=0
-
-  // بيانات وهمية للنشاط
-  final List<Map<String, String>> _activities = [
-    {
-      'date': 'السبت 25',
-      'image': 'assets/images/English.jpg',
-      'title': 'كورس لغة انجليزية: للمبتدئين',
-      'subtitle': ' أ. مريم',
-    },
-    {
-      'date': 'السبت 28',
-      'image': 'assets/images/English.jpg',
-      'title': 'كورس لغة انجليزية: للمبتدئين',
-      'subtitle': ' أ. مريم',
-    },
+  // Arabic labels for each day:
+  final List<String> _daysAr   = ['سبت','أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة'];
+  // Corresponding slugs for your API:
+  final List<String> _daysSlug = [
+    'saturday','sunday','monday','tuesday','wednesday','thursday','friday'
   ];
-
+  // which day is selected (0 = Saturday)
+  int _selectedIndex = DateTime.now().weekday % 7;
+  @override
+  void initState() {
+    super.initState();
+    // Fetch “today” on first build:
+    final todayIndex = DateTime.now().weekday % 7;
+    context.read<ScheduleCubit>().fetchByDay(_daysSlug[todayIndex]);
+  }
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<ScheduleCubit>();
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -48,6 +51,7 @@ class _WeeklyActivityPageState extends State<WeeklyActivityPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── Header Row ─────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -59,61 +63,37 @@ class _WeeklyActivityPageState extends State<WeeklyActivityPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  InkWell(
-                    onTap: () {
-                      GoRouter.of(context).go(AppRoutesNames.calendar);
-                    },
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      child: Row(
-                        children: [
-                          Text(
-                            'المزيد',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.sp,
-                              color: AppColor.textDarkBlue,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14.r,
-                            color: AppColor.textDarkBlue,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+
                 ],
               ),
+
               SizedBox(height: 16.h),
 
+              // ── Days Selector ───────────────────────
               SizedBox(
                 height: 50.h,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _days.length,
-                  itemBuilder: (ctx, i) {
-                    final selected = i == _selectedDayIndex;
+                  itemCount: _daysAr.length,
+                  itemBuilder: (_, i) {
+                    final selected = i == _selectedIndex;
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedDayIndex = i),
+                      onTap: () {
+                        setState(() => _selectedIndex = i);
+                        cubit.fetchByDay(_daysSlug[i]);
+                      },
                       child: Container(
                         width: 50.w,
                         margin: EdgeInsets.only(right: 12.w),
                         decoration: BoxDecoration(
-                          color:
-                              selected ? AppColor.purple : Colors.grey.shade300,
+                          color: selected ? AppColor.purple : Colors.grey.shade300,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          _days[i],
+                          _daysAr[i],
                           style: TextStyle(
-                            color:
-                                selected ? Colors.white : AppColor.textDarkBlue,
+                            color: selected ? Colors.white : AppColor.textDarkBlue,
                             fontSize: 14.sp,
                           ),
                         ),
@@ -124,75 +104,104 @@ class _WeeklyActivityPageState extends State<WeeklyActivityPage> {
               ),
 
               SizedBox(height: 24.h),
+
               const Text(
-                'هذا الأسبوع',
+                'هذا اليوم',
                 style: TextStyle(
                   fontSize: 22,
                   color: AppColor.textDarkBlue,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               SizedBox(height: 12.h),
 
+              // ── Schedule List ───────────────────────
               Expanded(
-                child: ListView.separated(
-                  itemCount: _activities.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                  itemBuilder: (ctx, idx) {
-                    final a = _activities[idx];
-                    return Card(color:  AppColor.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      elevation: 2,
-                      child: Padding(
-                        padding: EdgeInsets.all(12.w),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8.r),
-                              child: Image.asset(
-                                a['image']!,
-                                width: 80.w,
-                                height: 80.h,
-                                fit: BoxFit.cover,
-                              ),
+                child: BlocBuilder<ScheduleCubit, ScheduleState>(
+                  builder: (_, state) {
+                    if (state is ScheduleLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (state is ScheduleError) {
+                      return Center(child: Text('حدث خطأ: ${state.message}'));
+                    }
+                    if (state is ScheduleLoaded) {
+                      final events = state.events;
+                      if (events.isEmpty) {
+                        return const Center(child: Text('لا يوجد دورات في هذا اليوم',style:TextStyle(color: AppColor.textDarkBlue) ,));
+                      }
+                      return ListView.separated(
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        itemCount: events.length,
+                        separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                        itemBuilder: (_, idx) {
+                          final e = events[idx];
+                          return Card(
+                            color: AppColor.purple,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
                             ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            elevation: 2,
+                            child: Padding(
+                              padding: EdgeInsets.all(12.w),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    a['date']!,
-                                    style: TextStyle(
-                                      color: AppColor.gray3,
-                                      fontSize: 12.sp,
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    child: Image.network(
+                                      '${ConstString.baseURl}${e.course.photo}',
+                                      width: 80.w,
+                                      height: 80.h,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        width: 80.w,
+                                        height: 80.h,
+                                        color: Colors.grey[300],
+                                      ),
                                     ),
                                   ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    a['title']!,
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    a['subtitle']!,
-                                    style: TextStyle(
-                                      color: AppColor.gray3,
-                                      fontSize: 12.sp,
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${e.startTime.substring(0,5)} – ${e.endTime.substring(0,5)}',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12.sp,
+                                          ),
+                                        ),
+
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          e.course.name,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16.sp,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          e.sectionName,
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12.sp,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    );
+                          );
+                        },
+                      );
+                    }
+                    return const SizedBox.shrink();
                   },
                 ),
               ),

@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../cubit/courses_cubit.dart';
 import '../../cubit/courses_state.dart';
@@ -95,7 +96,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12.r),
                                 child: Image.network(
-                                  'http://192.168.195.198:8000/${c.photo}',
+                                  '${ConstString.baseURl}${c.photo}',
                                   width: 80.w,
                                   height: 80.w,
                                   fit: BoxFit.cover,

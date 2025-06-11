@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../my_course_details/cubit/my_courses_cubit.dart';
 import '../../../my_course_details/cubit/my_courses_state.dart';
 import '../../cubit/points_cubit.dart';
@@ -318,7 +319,7 @@ class _HomePageState extends State<HomePage> {
                 final dep = list[i];
                 // Full URL for department photo:
                 final imageUrl =
-                    'http://192.168.195.198:8000/${dep.photo}';
+                    '${ConstString.baseURl}${dep.photo}';
                 return GestureDetector(
                   onTap: () {
                     GoRouter.of(context).go(
@@ -421,7 +422,7 @@ class _HomePageState extends State<HomePage> {
                     separatorBuilder:(_,__)=>SizedBox(width:12.w),
                     itemBuilder:(_,i){
                       final e=list[i];
-                      final img='http://192.168.195.198:8000/${e.course.photo}';
+                      final img='${ConstString.baseURl}${e.course.photo}';
                       return GestureDetector(
                           onTap:()=>GoRouter.of(context).go(AppRoutesNames.myCourseDetails, extra:e),
                           child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[

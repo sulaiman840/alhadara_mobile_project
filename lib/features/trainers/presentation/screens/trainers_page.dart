@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../cubit/trainers_cubit.dart';
 import '../../cubit/trainers_state.dart';
@@ -51,7 +52,7 @@ class TrainersPage extends StatelessWidget {
                 itemBuilder: (_, i) {
                   final tc = list[i];
                   final img = tc.trainer.photo != null
-                      ? 'http://192.168.195.198:8000/${tc.trainer.photo}'
+                      ? '${ConstString.baseURl}${tc.trainer.photo}'
                       : 'assets/images/placeholder.png';
                   return InkWell(
                     onTap: () => context.go(

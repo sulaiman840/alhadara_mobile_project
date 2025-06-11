@@ -76,7 +76,7 @@ class _MyTestDetailsPageState extends State<MyTestDetailsPage> {
                       height: forumPx,
                       child: OutlinedButton(
                         onPressed: () {
-                          context.go(AppRoutesNames.fourm);
+                          // context.go(AppRoutesNames.fourm);
                           // TODO: Navigate to forum
                         },
                         style: OutlinedButton.styleFrom(

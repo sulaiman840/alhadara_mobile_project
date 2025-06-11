@@ -6,8 +6,8 @@ class SectionModel {
   final int seatsOfNumber;
   final int reservedSeats;
   final String state;
-  final String startDate; // e.g. "2025-05-10"
-  final String endDate;   // e.g. "2025-08-15"
+  final String startDate;
+  final String endDate;
   final int courseId;
   final String createdAt;
   final String updatedAt;
@@ -48,8 +48,8 @@ class TrainerModel {
   final String email;
   final String phone;
   final String? photo;
-  final String birthday;      // e.g. "2002/2/2"
-  final String gender;        // e.g. "female"
+  final String birthday;
+  final String gender;
   final String specialization;
   final String experience;
   final String createdAt;
@@ -92,8 +92,8 @@ class GradeModel {
   final int studentId;
   final int sectionId;
   final int trainerId;
-  final double grade;           // e.g. 85.5
-  final String examDate;        // ISO string
+  final double grade;
+  final String examDate;
   final String notes;
   final String createdAt;
   final String updatedAt;

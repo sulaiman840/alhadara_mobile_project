@@ -1,4 +1,3 @@
-// lib/features/auth/cubit/reset_password/reset_password_state.dart
 
 import 'package:equatable/equatable.dart';
 

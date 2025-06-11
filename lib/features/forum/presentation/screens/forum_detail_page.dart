@@ -1,120 +1,131 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
+import '../../../../core/utils/app_colors.dart';
+import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-
-import 'forum_page.dart';
+import '../../cubit/forum_cubit.dart';
+import '../../cubit/forum_state.dart';
 
 class ForumDetailPage extends StatefulWidget {
-  final Post post;
-
-  const ForumDetailPage(this.post, {Key? key}) : super(key: key);
+  final int sectionId;
+  final int questionId;
+  const ForumDetailPage({
+    required this.sectionId,
+    required this.questionId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   _ForumDetailPageState createState() => _ForumDetailPageState();
 }
 
 class _ForumDetailPageState extends State<ForumDetailPage> {
-  final _commentController = TextEditingController();
-
-  void _addComment([Comment? parent]) {
-    final text = _commentController.text.trim();
-    if (text.isEmpty) return;
-    setState(() {
-      final newComment = Comment(
-        authorName: 'أنت',
-        authorAvatar: 'assets/images/man.png',
-        text: text,
-      );
-      if (parent == null) {
-        widget.post.comments.add(newComment);
-      } else {
-        parent.replies.add(newComment);
-      }
-    });
-    _commentController.clear();
-  }
+  final _answerCtl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final post = widget.post;
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'تفاصيل السؤال',
-          onBack: () => Navigator.pop(context),
+          onBack: () =>  context.go('/forum/${widget.sectionId}'),
         ),
         body: Column(
           children: [
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                children: [
-                  // the original question
-                  Card(
-                    color: AppColor.purple,
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r)),
-                    child: Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(post.title,
-                              style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.bold)),
-                          SizedBox(height: 8.h),
-                          Text(post.content, style: TextStyle(fontSize: 14.sp)),
-                          SizedBox(height: 12.h),
-                          Row(
+              child: BlocBuilder<ForumCubit, ForumState>(
+                builder: (ctx, state) {
+                  if (state is ForumLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is ForumError) {
+                    return Center(child: Text(state.message));
+                  }
+                  final q = (state as ForumLoaded)
+                      .questions
+                      .firstWhere((q) => q.id == widget.questionId);
+
+                  return ListView(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                    children: [
+                      // question card
+                      Card(
+                        color: AppColor.purple,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        child: Padding(
+                          padding: EdgeInsets.all(16.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CircleAvatar(
-                                radius: 16.r,
-                                backgroundImage: AssetImage(post.authorAvatar),
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(post.authorName),
-                              Spacer(),
-                              Text(
-                                '${post.time.hour}:${post.time.minute.toString().padLeft(2, '0')}',
-                                style: TextStyle(color: AppColor.gray3),
+                              Text(q.title, style: TextStyle(fontSize: 18.sp, color: AppColor.white, fontWeight: FontWeight.bold)),
+                              SizedBox(height: 8.h),
+                              Text(q.content, style: TextStyle(fontSize: 14.sp, color: AppColor.white)),
+                              SizedBox(height: 12.h),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 16.r,
+                                    backgroundImage: NetworkImage('${ConstString.baseURl}${q.user.photo}'),
+                                  ),
+                                  SizedBox(width: 8.w),
+                                  Text(q.user.name, style: TextStyle(color: AppColor.white)),
+                                  Spacer(),
+                                  // Text(
+                                  //   '${q.createdAt.hour}:${q.createdAt.minute.toString().padLeft(2,'0')}',
+                                  //   style: TextStyle(color: AppColor.white),
+                                  // ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
 
-                  SizedBox(height: 24.h),
+                      SizedBox(height: 24.h),
 
-                  // comments & replies
-                  ...post.comments.map((c) => _buildCommentTile(c)).toList(),
-                ],
+                      // answers list
+                      ...q.answers.map((a) => Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: Card(color: AppColor.purple,
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage('${ConstString.baseURl}${a.user.photo}'),
+                            ),
+                            title: Text(a.content),
+                            subtitle: Text(a.user.name),
+                            trailing: IconButton(
+                              icon: Icon(Icons.thumb_up, color: a.isAccepted ? AppColor.green : AppColor.gray3),
+                              onPressed: () => ctx.read<ForumCubit>().toggleAnswerLike(widget.sectionId, a.id),
+                            ),
+                          ),
+                        ),
+                      )),
+                    ],
+                  );
+                },
               ),
             ),
 
-            // input to add a comment
+            // input to add an answer
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               color: AppColor.background,
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(style: TextStyle(color: AppColor.textDarkBlue,),
-                      controller: _commentController,
+                    child: TextField(
+                      controller: _answerCtl,
                       decoration: InputDecoration(
-                        hintText: 'أضف تعليقًا...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24.r),
-                        ),
+                        hintText: 'أضف إجابة...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24.r)),
                         contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
                       ),
                     ),
@@ -122,104 +133,23 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                   SizedBox(width: 8.w),
                   IconButton(
                     icon: Icon(Icons.send, color: AppColor.purple),
-                    onPressed: () => _addComment(),
+                    onPressed: () {
+                      final text = _answerCtl.text.trim();
+                      if (text.isNotEmpty) {
+                        context.read<ForumCubit>().addAnswer(
+                          widget.sectionId,
+                          widget.questionId,
+                          text,
+                        );
+                        _answerCtl.clear();
+                      }
+                    },
                   ),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCommentTile(Comment comment, {int indent = 0}) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24.w + indent * 16.w,
-        right: 24.w,
-        bottom: 16.h,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16.r,
-                // backgroundImage: AssetImage(comment.authorAvatar),
-                backgroundImage: AssetImage('assets/images/girl.png'),
-
-              ),
-              SizedBox(width: 8.w),
-              Text(comment.authorName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColor.textDarkBlue,
-                  )),
-              Spacer(),
-              IconButton(
-                icon: FaIcon(
-                  comment.liked
-                      ? FontAwesomeIcons.solidThumbsUp
-                      : FontAwesomeIcons.thumbsUp,
-                  size: 16.r,
-                  color: comment.liked ? AppColor.green : AppColor.gray3,
-                ),
-                onPressed: () => setState(() => comment.liked = !comment.liked),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.reply,
-                  size: 16.r,
-                  color: AppColor.textDarkBlue,
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) {
-                      final _replyCtl = TextEditingController();
-                      return AlertDialog(backgroundColor:  AppColor.purple,
-                        title: Text('رد على ${comment.authorName}'),
-                        content: TextField(
-                          controller: _replyCtl,
-                          decoration: InputDecoration(hintText: 'اكتب ردك هنا'),
-                        ),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text('إلغاء',style: TextStyle(color:  AppColor.white,),)),
-                          ElevatedButton(
-                            onPressed: () {
-                              final text = _replyCtl.text.trim();
-                              if (text.isNotEmpty) {
-                                setState(() => comment.replies.add(
-                                      Comment(
-                                        authorName: 'أنت',
-                                        authorAvatar: 'assets/images/man.png',
-                                        text: text,
-                                      ),
-                                    ));
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: Text('نشر',style: TextStyle(color:  AppColor.white,),),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          Text(comment.text,style: TextStyle(color: AppColor.textDarkBlue,),),
-          // show replies
-          ...comment.replies
-              .map((r) => _buildCommentTile(r, indent: indent + 1))
-              .toList(),
-        ],
       ),
     );
   }

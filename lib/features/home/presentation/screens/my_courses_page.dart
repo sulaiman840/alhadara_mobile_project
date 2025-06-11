@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../my_course_details/cubit/my_courses_cubit.dart';
 import '../../../my_course_details/cubit/my_courses_state.dart';
@@ -72,7 +73,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     itemBuilder: (_, i) {
                       final enrolled = list[i];
                       final imageUrl =
-                          'http://192.168.195.198:8000/${enrolled.course.photo}';
+                          '${ConstString.baseURl}${enrolled.course.photo}';
 
                       return InkWell(
                         onTap: () {

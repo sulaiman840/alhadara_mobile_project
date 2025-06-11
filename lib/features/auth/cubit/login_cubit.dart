@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import '../../../core/utils/const.dart';
 import '../data/repositories/auth_repository.dart';
 import 'login_state.dart';
 import 'package:alhadara_mobile_project/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -38,7 +39,7 @@ class LoginCubit extends Cubit<LoginState> {
       String photoUrl = '';
       if (user.photo != null && user.photo!.isNotEmpty) {
         // PREPEND your server’s base URL here:
-        photoUrl = 'http://192.168.195.198:8000/${user.photo}';
+        photoUrl = '${ConstString.baseURl}${user.photo}';
       }
       await prefs.setString('user_photo', photoUrl);
       emit(LoginSuccess(accessToken: accessToken, userId: user.id));
