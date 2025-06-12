@@ -110,10 +110,15 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
                     child: SizedBox(
                       width: 250.w,
                       height: forumPx,
-                      child: OutlinedButton(
+                      child:
+                      OutlinedButton(
                         onPressed: () {
-                          context.go('/forum/${widget.enrolled.id}');
-                        },
+                        //   context.go('/forum/${widget.enrolled.id}');
+                        // },
+                           context.pushNamed(
+                                 'forum',
+                                pathParameters: {'sectionId': widget.enrolled.id.toString()},
+                              );},
                         style: OutlinedButton.styleFrom(
                           backgroundColor: AppColor.purple,
                           side: BorderSide(color: AppColor.purple, width: 2.r),

@@ -375,26 +375,30 @@ class AppRouter {
       ),
       GoRoute(
         name: 'forum',
-        path: AppRoutesNames.forum,
+        path: AppRoutesNames.forum, // "/forum/:sectionId"
         pageBuilder: (ctx, state) {
           final sectionId = int.parse(state.pathParameters['sectionId']!);
           return CustomTransitionPage(
             key: state.pageKey,
-            child: BlocProvider<ForumCubit>(
-              create: (_) {
-                final c = getIt<ForumCubit>();
-                c.loadQuestions(sectionId);
-                return c;
-              },
+            transitionDuration: const Duration(milliseconds: 300),
+            transitionsBuilder: (ctx, animation, secondary, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            },
+            child: BlocProvider(
+              create: (_) => getIt<ForumCubit>()..loadQuestions(sectionId),
               child: ForumPage(sectionId: sectionId),
             ),
-            transitionDuration: Duration.zero,
-            transitionsBuilder: (_, __, ___, child) => child,
           );
         },
       ),
 
-// Forum detail
+// 2) Forum detail (separate, top‐level)
       GoRoute(
         name: 'forumDetail',
         path: AppRoutesNames.forumDetail,
@@ -403,6 +407,9 @@ class AppRouter {
           final questionId = int.parse(state.pathParameters['questionId']!);
           return CustomTransitionPage(
             key: state.pageKey,
+            opaque: true,
+            transitionDuration: Duration.zero,             // ← no gap
+            transitionsBuilder: (_, __, ___, child) => child,
             child: BlocProvider.value(
               value: getIt<ForumCubit>()..loadQuestions(sectionId),
               child: ForumDetailPage(
@@ -410,8 +417,6 @@ class AppRouter {
                 questionId: questionId,
               ),
             ),
-            transitionDuration: Duration.zero,
-            transitionsBuilder: (_, __, ___, child) => child,
           );
         },
       ),

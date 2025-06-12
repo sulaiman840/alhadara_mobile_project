@@ -59,5 +59,22 @@ class ApiService {
       return const Left(StatusRequest.failure);
     }
   }
+  Future<Either<StatusRequest, T>> put<T>(
+      String path,
+      Map<String, dynamic> body,
+      T Function(dynamic json) parser,
+      ) async {
+    try {
+      final response = await _dio.put(path, data: body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Right(parser(response.data));
+      }
+      return const Left(StatusRequest.serverfailure);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.unknown) {
+        return const Left(StatusRequest.offlinefailure);
+      }
+      return const Left(StatusRequest.failure);
+    }
+  }
 }
-

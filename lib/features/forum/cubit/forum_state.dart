@@ -1,8 +1,6 @@
 import 'package:equatable/equatable.dart';
-
 import '../data/models/question_model.dart';
 
-/// A simple union‐style state for all of your forum operations.
 abstract class ForumState extends Equatable {
   const ForumState();
   @override
@@ -11,10 +9,8 @@ abstract class ForumState extends Equatable {
 
 class ForumInitial extends ForumState {}
 
-/// Emitted when any operation is in progress (you could split this if you want).
 class ForumLoading extends ForumState {}
 
-/// Emitted when the list of questions is available.
 class ForumLoaded extends ForumState {
   final List<QuestionModel> questions;
   const ForumLoaded(this.questions);
@@ -22,7 +18,6 @@ class ForumLoaded extends ForumState {
   List<Object?> get props => [questions];
 }
 
-/// Emitted on *any* failure.  In a real app you might have more fine‐grained errors.
 class ForumError extends ForumState {
   final String message;
   const ForumError(this.message);

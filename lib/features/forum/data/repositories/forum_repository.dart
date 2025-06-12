@@ -1,27 +1,30 @@
-import 'package:dartz/dartz.dart';
+// lib/features/forum/data/repositories/forum_repository.dart
 
+import 'package:dartz/dartz.dart';
 import '../../../../core/network/statusrequest.dart';
 import '../datasources/forum_remote_data_source.dart';
 import '../models/question_model.dart';
 import '../models/answer_model.dart';
 
-/// The interface your Cubit will talk to.
 abstract class ForumRepository {
   Future<Either<StatusRequest, List<QuestionModel>>> fetchQuestions(int sectionId);
-  Future<Either<StatusRequest, QuestionModel>> postQuestion(
-      int sectionId,
-      Map<String, dynamic> body,
-      );
+
+  // Changed to return Unit
+  Future<Either<StatusRequest, Unit>> postQuestion(int sectionId, String content);
+  Future<Either<StatusRequest, Unit>> updateQuestion(int questionId, String content);
   Future<Either<StatusRequest, Unit>> deleteQuestion(int questionId);
-  Future<Either<StatusRequest, AnswerModel>> postAnswer(
-      int questionId,
-      Map<String, dynamic> body,
-      );
-  Future<Either<StatusRequest, bool>> toggleLikeQuestion(int questionId);
-  Future<Either<StatusRequest, bool>> toggleLikeAnswer(int answerId);
+
+  Future<Either<StatusRequest, Unit>> postAnswer(int sectionId, int questionId, String content);
+  Future<Either<StatusRequest, Unit>> updateAnswer(int answerId, String content);
+  Future<Either<StatusRequest, Unit>> deleteAnswer(int answerId);
+
+  Future<Either<StatusRequest, Unit>> likeQuestion(int questionId);
+  Future<Either<StatusRequest, Unit>> unlikeQuestion(int questionId);
+
+  Future<Either<StatusRequest, Unit>> likeAnswer(int answerId);
+  Future<Either<StatusRequest, Unit>> unlikeAnswer(int answerId);
 }
 
-/// A very thin implementation that just delegates to your remote data source.
 class ForumRepositoryImpl implements ForumRepository {
   final ForumRemoteDataSource _remote;
   ForumRepositoryImpl(this._remote);
@@ -31,28 +34,42 @@ class ForumRepositoryImpl implements ForumRepository {
       _remote.fetchQuestions(sectionId);
 
   @override
-  Future<Either<StatusRequest, QuestionModel>> postQuestion(
-      int sectionId,
-      Map<String, dynamic> body,
-      ) =>
-      _remote.postQuestion(sectionId, body);
+  Future<Either<StatusRequest, Unit>> postQuestion(int sectionId, String content) =>
+      _remote.postQuestion(sectionId, content);
+
+  @override
+  Future<Either<StatusRequest, Unit>> updateQuestion(int questionId, String content) =>
+      _remote.updateQuestion(questionId, content);
 
   @override
   Future<Either<StatusRequest, Unit>> deleteQuestion(int questionId) =>
       _remote.deleteQuestion(questionId);
 
   @override
-  Future<Either<StatusRequest, AnswerModel>> postAnswer(
-      int questionId,
-      Map<String, dynamic> body,
-      ) =>
-      _remote.postAnswer(questionId, body);
+  Future<Either<StatusRequest, Unit>> postAnswer(int sectionId, int questionId, String content) =>
+      _remote.postAnswer(sectionId, questionId, content);
 
   @override
-  Future<Either<StatusRequest, bool>> toggleLikeQuestion(int questionId) =>
-      _remote.toggleLikeQuestion(questionId);
+  Future<Either<StatusRequest, Unit>> updateAnswer(int answerId, String content) =>
+      _remote.updateAnswer(answerId, content);
 
   @override
-  Future<Either<StatusRequest, bool>> toggleLikeAnswer(int answerId) =>
-      _remote.toggleLikeAnswer(answerId);
+  Future<Either<StatusRequest, Unit>> deleteAnswer(int answerId) =>
+      _remote.deleteAnswer(answerId);
+
+  @override
+  Future<Either<StatusRequest, Unit>> likeQuestion(int questionId) =>
+      _remote.likeQuestion(questionId);
+
+  @override
+  Future<Either<StatusRequest, Unit>> unlikeQuestion(int questionId) =>
+      _remote.unlikeQuestion(questionId);
+
+  @override
+  Future<Either<StatusRequest, Unit>> likeAnswer(int answerId) =>
+      _remote.likeAnswer(answerId);
+
+  @override
+  Future<Either<StatusRequest, Unit>> unlikeAnswer(int answerId) =>
+      _remote.unlikeAnswer(answerId);
 }
