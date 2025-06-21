@@ -1,10 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
@@ -19,18 +17,18 @@ import '../../data/models/department_model.dart';
 class _Course {
   final String image;
   final String title;
+
   const _Course({required this.image, required this.title});
 }
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-
-
   final List<_Course> _suggested = const [
     _Course(image: 'assets/images/programming.jpg', title: 'مبادئ البرمجة'),
     _Course(image: 'assets/images/cooking.jpg', title: 'كورس الطبخ'),
@@ -42,15 +40,22 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // PointsCubit and DepartmentsCubit are already provided at the route level,
-    // so here we just trigger their loading if not done in router.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PointsCubit>().loadPoints();
-      context.read<DepartmentsCubit>().fetchDepartments();
-      context.read<MyCoursesCubit>().fetchMyCourses();
-
+      final pointsCubit = context.read<PointsCubit>();
+      if (pointsCubit.state is PointsInitial) {
+        pointsCubit.loadPoints();
+      }
+      final depsCubit = context.read<DepartmentsCubit>();
+      if (depsCubit.state is DepartmentsInitial) {
+        depsCubit.fetchDepartments();
+      }
+      final myCourses = context.read<MyCoursesCubit>();
+      if (myCourses.state is MyCoursesInitial) {
+        myCourses.fetchMyCourses();
+      }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -71,27 +76,38 @@ class _HomePageState extends State<HomePage> {
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(height: 16.h),
-                  _buildSearchBar(),
-                  SizedBox(height: 16.h),
-                  _buildPointsCapsule(),
-                  SizedBox(height: 16.h),
-                  _buildSectionTitle('قائمة الأقسام'),
-                  SizedBox(height: 12.h),
-                  _buildDepartmentChips(),
-                  SizedBox(height: 24.h),
-                  _buildSectionTitle('قائمة كورساتي'),
-                  SizedBox(height: 12.h),
-                  _buildMyCoursesCarousel(),
-                  SizedBox(height: 24.h),
-                  _buildSectionTitle('كورسات مقترحة'),
-                  SizedBox(height: 12.h),
-                  _buildSuggestedGrid(),
-                  SizedBox(height: 24.h),
-                ],
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // fire all three in parallel
+                await Future.wait([
+                  context.read<PointsCubit>().loadPoints(),
+                  context.read<DepartmentsCubit>().fetchDepartments(),
+                  context.read<MyCoursesCubit>().fetchMyCourses(),
+                ]);
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    SizedBox(height: 16.h),
+                    _buildSearchBar(),
+                    SizedBox(height: 16.h),
+                    _buildPointsCapsule(),
+                    SizedBox(height: 16.h),
+                    _buildSectionTitle('قائمة الأقسام'),
+                    SizedBox(height: 12.h),
+                    _buildDepartmentChips(),
+                    SizedBox(height: 24.h),
+                    _buildSectionTitle('قائمة كورساتي'),
+                    SizedBox(height: 12.h),
+                    _buildMyCoursesCarousel(),
+                    SizedBox(height: 24.h),
+                    _buildSectionTitle('كورسات مقترحة'),
+                    SizedBox(height: 12.h),
+                    _buildSuggestedGrid(),
+                    SizedBox(height: 24.h),
+                  ],
+                ),
               ),
             ),
           ),
@@ -116,14 +132,14 @@ class _HomePageState extends State<HomePage> {
         _buildCircleIconButton(
           icon: FontAwesomeIcons.solidBell,
           onTap: () {
-            GoRouter.of(context).go(AppRoutesNames.notifications);
+            context.push(AppRoutesNames.notifications);
           },
         ),
         SizedBox(width: 12.w),
         _buildCircleAvatar(
           imagePath: 'assets/images/man.png',
           onTap: () {
-            GoRouter.of(context).go(AppRoutesNames.profile);
+            context.push(AppRoutesNames.profile);
           },
         ),
       ],
@@ -176,7 +192,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSearchBar() {
     return InkWell(
       borderRadius: BorderRadius.circular(12.r),
-      onTap: () => GoRouter.of(context).go(AppRoutesNames.search),
+      onTap: () => context.push(AppRoutesNames.search),
       child: Container(
         height: 40.h,
         padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -214,6 +230,7 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         } else if (state is PointsFailure) {
+          print(state.errorMessage);
           rightSide = Center(
             child: Text(
               state.errorMessage,
@@ -285,6 +302,8 @@ class _HomePageState extends State<HomePage> {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is DepartmentsFailure) {
+          print(state.errorMessage);
+
           return Center(
             child: Text(
               state.errorMessage,
@@ -318,11 +337,10 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (_, i) {
                 final dep = list[i];
                 // Full URL for department photo:
-                final imageUrl =
-                    '${ConstString.baseURl}${dep.photo}';
+                final imageUrl = '${ConstString.baseURl}${dep.photo}';
                 return GestureDetector(
                   onTap: () {
-                    GoRouter.of(context).go(
+                    context.push(
                       AppRoutesNames.coursesList,
                       extra: {'id': dep.id, 'name': dep.name},
                     );
@@ -336,16 +354,17 @@ class _HomePageState extends State<HomePage> {
                           width: 55.r,
                           height: 48.r,
                           fit: BoxFit.cover,
-                          errorBuilder: (ctx, error, stack) => Container(
-                            width: 48.r,
-                            height: 48.r,
-                            color: Colors.grey[200],
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 24.r,
-                              color: AppColor.gray3,
-                            ),
-                          ),
+                          errorBuilder: (ctx, error, stack) =>
+                              Container(
+                                width: 48.r,
+                                height: 48.r,
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 24.r,
+                                  color: AppColor.gray3,
+                                ),
+                              ),
                           loadingBuilder: (ctx, child, progress) {
                             if (progress == null) return child;
                             return Container(
@@ -406,40 +425,80 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMyCoursesCarousel() => BlocBuilder<MyCoursesCubit, MyCoursesState>(
-      builder:(c,s){
-        if (s is MyCoursesLoading || s is MyCoursesInitial) return Center(child:CircularProgressIndicator());
-        if (s is MyCoursesFailure) return Center(child:Text(s.errorMessage, style:TextStyle(fontSize:14.sp, color:Colors.red), textAlign:TextAlign.center));
+  Widget _buildMyCoursesCarousel() =>
+      BlocBuilder<MyCoursesCubit, MyCoursesState>(builder: (c, s) {
+        if (s is MyCoursesLoading || s is MyCoursesInitial)
+          return Center(child: CircularProgressIndicator());
+        if (s is MyCoursesFailure) {
+          print(s.errorMessage);
+          Text(s.errorMessage,
+              style: TextStyle(fontSize: 14.sp, color: Colors.red),
+              textAlign: TextAlign.center);
+        }
+
         if (s is MyCoursesSuccess) {
-          final list=s.courses;
-          if (list.isEmpty) return Center(child:Text('لم تقم بالتسجيل في أي كورس بعد',style:TextStyle(fontSize:14.sp,color:AppColor.textDarkBlue)));
+          final list = s.courses;
+          if (list.isEmpty)
+            return Center(
+                child: Text('لم تقم بالتسجيل في أي كورس بعد',
+                    style: TextStyle(
+                        fontSize: 14.sp, color: AppColor.textDarkBlue)));
           return SizedBox(
-              height:160.h,
-              child: Stack(children:[
-                Padding(padding:EdgeInsets.only(left:45.w),child:ListView.separated(
-                    scrollDirection:Axis.horizontal,
-                    itemCount: list.length,
-                    separatorBuilder:(_,__)=>SizedBox(width:12.w),
-                    itemBuilder:(_,i){
-                      final e=list[i];
-                      final img='${ConstString.baseURl}${e.course.photo}';
-                      return GestureDetector(
-                          onTap:()=>GoRouter.of(context).go(AppRoutesNames.myCourseDetails, extra:e),
-                          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                            ClipRRect(borderRadius:BorderRadius.circular(12.r),child:Image.network(img,width:120.w,height:120.h,fit:BoxFit.cover)),
-                            SizedBox(height:8.h),
-                            SizedBox(width:120.w,child:Text(e.course.name,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:AppColor.textDarkBlue,fontSize:14.sp,fontWeight:FontWeight.w500))),
-                          ])
-                      );
-                    }
-                )),
-                Align(alignment:Alignment.centerLeft,child:IconButton(icon:Icon(Icons.arrow_back_ios,size:20.r),onPressed:()=>GoRouter.of(context).go(AppRoutesNames.myCourses)))
-              ])
-          );
+              height: 160.h,
+              child: Stack(children: [
+                Padding(
+                    padding: EdgeInsets.only(left: 45.w),
+                    child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: list.length,
+                        separatorBuilder: (_, __) => SizedBox(width: 12.w),
+                        itemBuilder: (_, i) {
+                          final e = list[i];
+                          final img = '${ConstString.baseURl}${e.course.photo}';
+                          return
+                            GestureDetector(
+                                onTap: () =>
+                                    context.pushNamed(
+                                      'myCourseDetails',
+                                      pathParameters: {
+                                        'enrolledId': e.id.toString(),
+                                      },
+                                    ),
+                                child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      ClipRRect(
+                                          borderRadius:
+                                          BorderRadius.circular(12.r),
+                                          child: Image.network(img,
+                                              width: 120.w,
+                                              height: 120.h,
+                                              fit: BoxFit.cover)),
+                                      SizedBox(height: 8.h),
+                                      SizedBox(
+                                          width: 120.w,
+                                          child: Text(e.course.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                  color: AppColor.textDarkBlue,
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight
+                                                      .w500))),
+                                    ]));
+                        })),
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                        icon: Icon(Icons.arrow_back_ios, size: 20.r),
+                        onPressed: () =>
+                            context.push(AppRoutesNames.myCourses)))
+              ]));
         }
         return SizedBox.shrink();
-      }
-  );
+      });
+
   Widget _buildSuggestedGrid() {
     return GridView.builder(
       shrinkWrap: true,
@@ -456,7 +515,7 @@ class _HomePageState extends State<HomePage> {
         final c = _suggested[i];
         return GestureDetector(
           onTap: () {
-            GoRouter.of(context).go(AppRoutesNames.myTestDetails);
+            context.push(AppRoutesNames.myTestDetails);
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

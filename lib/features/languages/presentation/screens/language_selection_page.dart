@@ -31,7 +31,6 @@ class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'اختيار اللغة',
-          onBack: () => context.go(AppRoutesNames.settings),
         ),
         body: ListView.builder(
           padding: EdgeInsets.symmetric(vertical: 44.h, horizontal: 16.w),

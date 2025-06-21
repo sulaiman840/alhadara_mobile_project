@@ -1,4 +1,4 @@
-// lib/features/tests/data/datasources/grades_remote_data_source.dart
+// lib/features/test_results/data/datasources/grades_remote_data_source.dart
 
 import 'package:dio/dio.dart';
 import '../models/grade_model.dart';
@@ -8,26 +8,20 @@ class GradesRemoteDataSource {
 
   GradesRemoteDataSource(this._dio);
 
-  /// Fetch “my grades” from the server.
   Future<List<GradeModel>> fetchMyGrades() async {
-    final path = 'api/grades/my-grades';
-    try {
-      final response = await _dio.get(path);
-      if (response.statusCode == 200) {
-        final body = response.data as Map<String, dynamic>;
-        final rawList = body['data'] as List<dynamic>;
-        return rawList
-            .map((e) => GradeModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          type: DioExceptionType.badResponse,
-        );
-      }
-    } on DioException {
-      rethrow;
+    final response = await _dio.get('api/grades/my-grades');
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      // grab the `data` array out of the "grades" wrapper:
+      final raw = (data['grades'] as Map<String, dynamic>)['data'] as List;
+      return raw
+          .map((j) => GradeModel.fromJson(j as Map<String, dynamic>))
+          .toList();
     }
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      type: DioExceptionType.badResponse,
+    );
   }
 }

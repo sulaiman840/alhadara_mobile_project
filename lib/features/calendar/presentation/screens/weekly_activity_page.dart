@@ -44,7 +44,6 @@ class _WeeklyActivityPageState extends State<WeeklyActivityPage> {
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'النشاط التعليمي',
-          onBack: () => context.go(AppRoutesNames.home),
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),

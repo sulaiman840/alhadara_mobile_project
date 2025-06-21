@@ -1,18 +1,17 @@
-// lib/features/home/presentation/screens/courses_list_page.dart
-
+// lib/features/course_sections/presentation/screens/courses_list_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../saved courses/cubit/saved_courses_cubit.dart';
+import '../../../saved courses/cubit/saved_courses_state.dart';
 import '../../cubit/courses_cubit.dart';
 import '../../cubit/courses_state.dart';
-import '../../data/models/course_model.dart';
 
 class CoursesListPage extends StatefulWidget {
   final int departmentId;
@@ -31,33 +30,45 @@ class CoursesListPage extends StatefulWidget {
 class _CoursesListPageState extends State<CoursesListPage> {
   @override
   Widget build(BuildContext context) {
+    // 1️⃣ build UI that depends on both SavedCoursesCubit and CoursesCubit
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title:'قائمة كورسات ${widget.departmentName}',
-          onBack: () => context.go(AppRoutesNames.home),
+          title: 'قائمة كورسات ${widget.departmentName}',
         ),
-        body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: BlocBuilder<CoursesCubit, CoursesState>(
-              builder: (context, state) {
-                if (state is CoursesLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is CoursesFailure) {
-                  return Center(
-                    child: Text(
-                      state.errorMessage,
-                      style: TextStyle(color: Colors.red, fontSize: 16.sp),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                }
-                if (state is CoursesSuccess) {
-                  final List<CourseModel> courses = state.courses;
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: BlocBuilder<SavedCoursesCubit, SavedCoursesState>(
+            builder: (ctxSaved, savedState) {
+              if (savedState is SavedCoursesLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (savedState is SavedCoursesError) {
+                return Center(child: Text(savedState.message));
+              }
+
+              // we now have the set of saved course IDs
+              final savedIds = <int>{
+                for (final c in (savedState as SavedCoursesLoaded).courses) c.id
+              };
+
+              return BlocBuilder<CoursesCubit, CoursesState>(
+                builder: (ctxCourse, courseState) {
+                  if (courseState is CoursesLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (courseState is CoursesFailure) {
+                    return Center(
+                      child: Text(
+                        courseState.errorMessage,
+                        style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  final courses = (courseState as CoursesSuccess).courses;
                   if (courses.isEmpty) {
                     return Center(
                       child: Text(
@@ -76,13 +87,15 @@ class _CoursesListPageState extends State<CoursesListPage> {
                         Divider(color: AppColor.gray3, thickness: 0.2.h),
                     itemBuilder: (_, i) {
                       final c = courses[i];
+                      final isSaved = savedIds.contains(c.id);
 
                       return InkWell(
+                        // row tap → course details
                         onTap: () {
-                          GoRouter.of(context).go(
+                          context.push(
                             AppRoutesNames.courseDetails,
                             extra: {
-                              'course': c,
+                              'course': c.toJson(),
                               'deptName': widget.departmentName,
                             },
                           );
@@ -92,7 +105,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // ── Thumbnail on the right
+                              // ── Thumbnail ────────────────────────
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12.r),
                                 child: Image.network(
@@ -100,13 +113,13 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                   width: 80.w,
                                   height: 80.w,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (ctx, error, stack) => Container(
+                                  errorBuilder: (ctx, err, stack) => Container(
                                     width: 80.w,
                                     height: 80.w,
                                     color: Colors.grey[200],
                                     child: Icon(
                                       Icons.broken_image,
-                                      size: 40.r,
+                                      size: 24.r,
                                       color: AppColor.gray3,
                                     ),
                                   ),
@@ -130,7 +143,8 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                 ),
                               ),
                               SizedBox(width: 12.w),
-                              // ── Course info in the middle
+
+                              // ── Course info ──────────────────────
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +164,8 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                       c.description,
                                       style: TextStyle(
                                         fontSize: 14.sp,
-                                        color: AppColor.textDarkBlue.withOpacity(0.7),
+                                        color: AppColor.textDarkBlue
+                                            .withValues(alpha: 0.7),
                                       ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
@@ -159,15 +174,22 @@ class _CoursesListPageState extends State<CoursesListPage> {
                                 ),
                               ),
                               SizedBox(width: 12.w),
-                              // ── Bookmark/favorite icon if you want:
+
+                              // ── Bookmark icon ────────────────────
                               GestureDetector(
+                                // only this icon toggles saved state
                                 onTap: () {
-                                  // implement “mark as favorite” if needed
+                                  ctxSaved
+                                      .read<SavedCoursesCubit>()
+                                      .toggleSaved(c.id, isSaved);
                                 },
                                 child: FaIcon(
-                                  FontAwesomeIcons.bookmark,
+                                  isSaved
+                                      ? FontAwesomeIcons.solidBookmark
+                                      : FontAwesomeIcons.bookmark,
                                   size: 20.r,
-                                  color: AppColor.gray3,
+                                  color:
+                                  isSaved ? AppColor.purple : AppColor.gray3,
                                 ),
                               ),
                             ],
@@ -176,11 +198,9 @@ class _CoursesListPageState extends State<CoursesListPage> {
                       );
                     },
                   );
-                }
-                // default:
-                return const SizedBox.shrink();
-              },
-            ),
+                },
+              );
+            },
           ),
         ),
       ),

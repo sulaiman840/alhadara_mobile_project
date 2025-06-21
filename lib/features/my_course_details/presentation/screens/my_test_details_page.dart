@@ -2,10 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
+
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
-import '../../../../core/navigation/routes_names.dart';
+
 import '../../../../shared/widgets/custom_app_bar.dart';
 
 class MyTestDetailsPage extends StatefulWidget {
@@ -50,7 +50,6 @@ class _MyTestDetailsPageState extends State<MyTestDetailsPage> {
             backgroundColor: AppColor.background,
             appBar: CustomAppBar(
               title: 'تفاصيل الكورس',
-              onBack: () => context.go(AppRoutesNames.home),
             ),
             body: CustomScrollView(
               slivers: [
@@ -76,8 +75,8 @@ class _MyTestDetailsPageState extends State<MyTestDetailsPage> {
                       height: forumPx,
                       child: OutlinedButton(
                         onPressed: () {
-                          // context.go(AppRoutesNames.fourm);
-                          // TODO: Navigate to forum
+
+
                         },
                         style: OutlinedButton.styleFrom(
                           backgroundColor: AppColor.purple,

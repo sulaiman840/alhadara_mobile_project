@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import '../features/ads/cubit/ads_cubit.dart';
+import '../features/ads/data/datasources/ads_remote_data_source.dart';
+import '../features/ads/data/repositories/ads_repository.dart';
 import '../features/auth/cubit/forgot_password_cubit.dart';
 import '../features/auth/cubit/login_cubit.dart';
 import '../features/auth/cubit/reset_password_cubit.dart';
@@ -40,6 +43,15 @@ import '../features/my_course_details/data/datasources/section_files_remote_data
 import '../features/my_course_details/data/repositories/my_courses_repository.dart';
 import '../features/my_course_details/data/repositories/quiz_repository.dart';
 import '../features/my_course_details/data/repositories/section_files_repository.dart';
+import '../features/profile/cubit/profile_cubit.dart';
+import '../features/profile/data/datasources/profile_remote_data_source.dart';
+import '../features/profile/data/repositories/profile_repository.dart';
+import '../features/ratings/cubit/ratings_cubit.dart';
+import '../features/ratings/data/datasources/ratings_remote_data_source.dart';
+import '../features/ratings/data/repositories/ratings_repository.dart';
+import '../features/saved courses/cubit/saved_courses_cubit.dart';
+import '../features/saved courses/data/datasources/saved_courses_remote_data_source.dart';
+import '../features/saved courses/data/repositories/saved_courses_repository.dart';
 import '../features/test_results/cubit/grades_cubit.dart';
 import '../features/test_results/data/datasources/grades_remote_data_source.dart';
 import '../features/test_results/data/repositories/grades_repository.dart';
@@ -131,7 +143,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<PointsRepository>(
         () => PointsRepositoryImpl(getIt<PointsRemoteDataSource>()),
   );
-  getIt.registerFactory<PointsCubit>(
+  getIt.registerLazySingleton<PointsCubit>(
         () => PointsCubit(getIt<PointsRepository>()),
   );
   //////////////////
@@ -155,7 +167,7 @@ Future<void> configureDependencies() async {
         () => DepartmentsRepositoryImpl(getIt<DepartmentsRemoteDataSource>()),
   );
 
-  getIt.registerFactory<DepartmentsCubit>(
+  getIt.registerLazySingleton<DepartmentsCubit>(
         () => DepartmentsCubit(getIt<DepartmentsRepository>()),
   );
   //////////////////
@@ -187,7 +199,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<MyCoursesRepository>(
         () => MyCoursesRepositoryImpl(getIt<MyCoursesRemoteDataSource>()),
   );
-  getIt.registerFactory<MyCoursesCubit>(
+  getIt.registerLazySingleton<MyCoursesCubit>(
         () => MyCoursesCubit(getIt<MyCoursesRepository>()),
   );
   //////////////////
@@ -233,6 +245,46 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<QuizRepository>(
           () => QuizRepositoryImpl(getIt<QuizRemoteDataSource>()));
   getIt.registerFactory<QuizCubit>(() => QuizCubit(getIt<QuizRepository>()));
+  //////////////////
+  getIt.registerLazySingleton<SavedCoursesRemoteDataSource>(
+        () => SavedCoursesRemoteDataSourceImpl(getIt<Dio>()),
+  );
+  getIt.registerLazySingleton<SavedCoursesRepository>(
+        () => SavedCoursesRepositoryImpl(getIt<SavedCoursesRemoteDataSource>()),
+  );
+  getIt.registerFactory<SavedCoursesCubit>(
+          () => SavedCoursesCubit(
+        getIt<SavedCoursesRepository>(),
+        getIt<MyCoursesRepository>(),
+      ));
+
+  //////////////////
+  getIt.registerLazySingleton<ProfileRemoteDataSource>(
+          () => ProfileRemoteDataSourceImpl(getIt<ApiService>()));
+  getIt.registerLazySingleton<ProfileRepository>(
+          () => ProfileRepositoryImpl(getIt<ProfileRemoteDataSource>()));
+  getIt.registerFactory<ProfileCubit>(
+          () => ProfileCubit(getIt<ProfileRepository>()));
+  //////////////////
+  getIt.registerLazySingleton<AdsRemoteDataSource>(
+        () => AdsRemoteDataSourceImpl(getIt<ApiService>()),
+  );
+  getIt.registerLazySingleton<AdsRepository>(
+        () => AdsRepositoryImpl(getIt<AdsRemoteDataSource>()),
+  );
+  getIt.registerFactory<AdsCubit>(
+        () => AdsCubit(getIt<AdsRepository>()),
+  );
+  //////////////////
+  getIt.registerLazySingleton<RatingsRemoteDataSource>(
+        () => RatingsRemoteDataSourceImpl(getIt<ApiService>()),
+  );
+  getIt.registerLazySingleton<RatingsRepository>(
+        () => RatingsRepositoryImpl(getIt<RatingsRemoteDataSource>()),
+  );
+  getIt.registerFactory<RatingsCubit>(
+        () => RatingsCubit(getIt<RatingsRepository>()),
+  );
   //////////////////
 }
 

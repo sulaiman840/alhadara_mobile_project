@@ -1,3 +1,4 @@
+// lib/features/test_results/presentation/screens/test_results_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,7 +12,6 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 
 import '../../cubit/grades_cubit.dart';
 import '../../cubit/grades_state.dart';
-
 
 class TestResultsPage extends StatelessWidget {
   const TestResultsPage({Key? key}) : super(key: key);
@@ -41,7 +41,9 @@ class TestResultsPage extends StatelessWidget {
   String _formatDate(String iso) {
     try {
       final dt = DateTime.parse(iso);
-      return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+      return "${dt.day.toString().padLeft(2, '0')}/"
+          "${dt.month.toString().padLeft(2, '0')}/"
+          "${dt.year}";
     } catch (_) {
       return iso.split('T').first; // fallback
     }
@@ -55,15 +57,13 @@ class TestResultsPage extends StatelessWidget {
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'نتائج الاختبارات',
-          onBack: () => context.go(AppRoutesNames.menu_page),
         ),
         body: BlocBuilder<GradesCubit, GradesState>(
           builder: (context, state) {
             if (state is GradesLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            } else if (state is GradesError) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is GradesError) {
               return Center(
                 child: Text(
                   state.errorMessage,
@@ -74,7 +74,8 @@ class TestResultsPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               );
-            } else if (state is GradesLoaded) {
+            }
+            if (state is GradesLoaded) {
               final grades = state.grades;
               if (grades.isEmpty) {
                 return Center(
@@ -93,10 +94,9 @@ class TestResultsPage extends StatelessWidget {
                 separatorBuilder: (_, __) => SizedBox(height: 24.h),
                 itemBuilder: (ctx, idx) {
                   final item = grades[idx];
-                  final sectionName = item.section.name;
+                  final examName    = item.examName;
                   final examDateStr = _formatDate(item.examDate);
-                  final trainerName = item.trainer.name;
-                  final notes = item.notes;
+                  final trainerName = item.trainerName;
 
                   return Card(
                     color: AppColor.white,
@@ -123,7 +123,7 @@ class TestResultsPage extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  sectionName,
+                                  examName,
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
@@ -133,14 +133,6 @@ class TestResultsPage extends StatelessWidget {
                                 SizedBox(height: 8.h),
                                 Text(
                                   '$examDateStr • $trainerName',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: AppColor.gray3,
-                                  ),
-                                ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  '$notes ',
                                   style: TextStyle(
                                     fontSize: 14.sp,
                                     color: AppColor.gray3,
@@ -162,10 +154,10 @@ class TestResultsPage extends StatelessWidget {
                   );
                 },
               );
-            } else {
-              // state is GradesInitial
-              return const SizedBox.shrink();
             }
+
+            // state is GradesInitial
+            return const SizedBox.shrink();
           },
         ),
       ),

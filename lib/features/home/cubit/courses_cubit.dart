@@ -16,6 +16,7 @@ class CoursesCubit extends Cubit<CoursesState> {
 
   /// Fetch all courses in [departmentId], then cache them in `_allCourses`.
   Future<void> fetchCourses(int departmentId) async {
+    if (state is CoursesLoading) return;
     emit(CoursesLoading());
     try {
       final list = await _repository.fetchCoursesByDepartment(departmentId);
@@ -29,8 +30,10 @@ class CoursesCubit extends Cubit<CoursesState> {
           msg = raw['message'] as String;
         }
       }
+      print(msg);
       emit(CoursesFailure(msg));
     } catch (_) {
+      print(CoursesFailure);
       emit(const CoursesFailure('حدث خطأ غير متوقع'));
     }
   }

@@ -30,7 +30,6 @@ class _ThemeModeSelectionPageState extends State<ThemeModeSelectionPage> {
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'تغيير وضع العرض',
-          onBack: () => context.go(AppRoutesNames.settings),
         ),
         body: ListView.builder(
           padding: EdgeInsets.symmetric(vertical:44.h, horizontal: 16.w),

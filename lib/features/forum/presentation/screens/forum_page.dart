@@ -150,7 +150,7 @@ class ForumPage extends StatelessWidget {
             backgroundColor: AppColor.background,
             appBar: CustomAppBar(
               title: 'المنتدى',
-              onBack: () => context.pop(),
+
             ),
             floatingActionButton: FloatingActionButton(
               backgroundColor: AppColor.purple2,
@@ -167,7 +167,7 @@ class ForumPage extends StatelessWidget {
                 final qs = (state as ForumLoaded).questions;
                 if (qs.isEmpty)
                   return const Center(
-                      child: Text('لا يوجد أسئلة في هذا القسم'));
+                      child: Text('لا يوجد أسئلة في هذا القسم',style: TextStyle(color: AppColor.textDarkBlue),));
 
                 return ListView.separated(
                   padding:
@@ -225,12 +225,12 @@ class ForumPage extends StatelessWidget {
                                       icon: const Icon(Icons.comment, color: Colors.white),
                                       onPressed: () {
                                         context.pushNamed(
-                                          'forumDetail',
-                                          pathParameters: {
-                                            'sectionId': sectionId.toString(),
-                                            'questionId': q.id.toString(),
-                                          },
-                                        );
+                                                  'forumDetail',
+                                                   pathParameters: {
+                                                 'sectionId': sectionId.toString(),
+                                                 'questionId': q.id.toString(),
+                                               },
+                                                );
                                       },
                                     ),                                  ],
                                 ),

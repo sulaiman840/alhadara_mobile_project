@@ -11,7 +11,7 @@ class AppRoutesNames {
   static const String categories = '/categories';
   static const String myCourses = '/myCourses';
   static const String coursesList = '/coursesList';
-  static const String myCourseDetails = '/myCourseDetails';
+  static const String myCourseDetails = '/myCourses/:enrolledId';
   static const String courseDetails = '/courseDetails';
   static const forum = '/forum/:sectionId';
   static const forumDetail = '/forum/:sectionId/question/:questionId';
@@ -32,6 +32,7 @@ class AppRoutesNames {
   static const trainers = '/trainers';
   static const trainersDetails = '/trainersDetails';
   static const String pendingSections = '/pendingSections';
+  static const String activeAds = '/ads';
   static const testDetails = '/testDetails';
   static const myTestDetails = '/myTestDetails';
 

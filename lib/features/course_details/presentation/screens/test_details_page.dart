@@ -52,7 +52,6 @@ class _TestDetailsPageState extends State<TestDetailsPage> {
             backgroundColor: AppColor.background,
             appBar: CustomAppBar(
               title: 'تفاصيل الكورس',
-              onBack: () => context.go(AppRoutesNames.home),
             ),
             body: CustomScrollView(
               slivers: [

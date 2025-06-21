@@ -12,6 +12,7 @@ class DepartmentsCubit extends Cubit<DepartmentsState> {
 
   /// Fetch all departments and emit appropriate states.
   Future<void> fetchDepartments() async {
+    if (state is DepartmentsLoading) return;
     emit(DepartmentsLoading());
     try {
       final list = await _repository.fetchAllDepartments();

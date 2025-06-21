@@ -12,19 +12,18 @@ class PointsCubit extends Cubit<PointsState> {
   PointsCubit(this._repository) : super(PointsInitial());
 
   Future<void> loadPoints() async {
+    if (state is PointsLoading) return;
     emit(PointsLoading());
     try {
-      final PointsModel model = await _repository.fetchPoints();
+      final model = await _repository.fetchPoints();
       emit(PointsSuccess(model.points));
     } on DioException catch (e) {
-      String message = 'تعذّر جلب النقاط';
-      if (e.response?.data is Map<String, dynamic>) {
-        final raw = e.response!.data as Map<String, dynamic>;
-        if (raw.containsKey('message') && raw['message'] is String) {
-          message = raw['message'] as String;
-        }
-      }
-      emit(PointsFailure(message));
+      // you can special-case 401 here if you want to redirect to login
+      final msg = (e.response?.data is Map &&
+          (e.response!.data as Map).containsKey('message'))
+          ? (e.response!.data['message'] as String)
+          : 'تعذّر جلب النقاط';
+      emit(PointsFailure(msg));
     } catch (_) {
       emit(const PointsFailure('خطأ غير متوقع'));
     }

@@ -24,7 +24,6 @@ class Settings extends StatelessWidget {
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'الاعدادات',
-          onBack: () => context.go(AppRoutesNames.menu_page),
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
@@ -50,7 +49,7 @@ class Settings extends StatelessWidget {
                         style: TextStyle(fontSize: 16.sp, color: AppColor.textDarkBlue),
                       ),
                       trailing: Icon(Icons.arrow_forward_ios, size: 16.r, color: AppColor.gray3),
-                      onTap: () => context.go(item.route),
+                      onTap: () => context.push(item.route),
                     );
                   },
                 ),

@@ -24,7 +24,6 @@ class TrainersPage extends StatelessWidget {
       child: Scaffold(
         appBar: CustomAppBar(
           title: 'المدربين',
-          onBack: () => context.go(AppRoutesNames.home),
         ),
         backgroundColor: AppColor.background,
         body: BlocBuilder<TrainersCubit, TrainersState>(
@@ -55,7 +54,7 @@ class TrainersPage extends StatelessWidget {
                       ? '${ConstString.baseURl}${tc.trainer.photo}'
                       : 'assets/images/placeholder.png';
                   return InkWell(
-                    onTap: () => context.go(
+                    onTap: () => context.push(
                       AppRoutesNames.trainersDetails,
                       extra: tc,
                     ),

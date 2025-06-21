@@ -75,7 +75,7 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
           backgroundColor: AppColor.background,
           appBar: CustomAppBar(
             title: 'المساعدة والدعم الفني',
-            onBack: () => context.go(AppRoutesNames.menu_page),
+            onBack: () => context.pop(),
           ),
           body: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),

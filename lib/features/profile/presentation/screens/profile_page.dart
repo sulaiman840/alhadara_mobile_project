@@ -1,54 +1,18 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
+import '../../../../core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
+import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/TextFormField/custom_text_form_field.dart';
-import '../../../../shared/widgets/TextFormField/custom_password_field.dart';
-import '../../../../shared/widgets/buttons/custom_button.dart';
+import '../../../profile/cubit/profile_cubit.dart';
+import '../../../profile/cubit/profile_state.dart';
+import '../Widget/info_card_widget.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
-
-  @override
-  _ProfilePageState createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  final _formKey = GlobalKey<FormState>();
-
-  late TextEditingController _nameCtl;
-  late TextEditingController _passwordCtl;
-  late TextEditingController _phoneCtl;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _nameCtl     = TextEditingController(text: 'أحمد محمد');
-    _passwordCtl = TextEditingController(text: 'password123');
-    _phoneCtl    = TextEditingController(text: '911 101 923 963+');
-  }
-
-  @override
-  void dispose() {
-    _nameCtl.dispose();
-    _passwordCtl.dispose();
-    _phoneCtl.dispose();
-    super.dispose();
-  }
-
-  void _saveChanges() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: submit updated profile
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حفظ التغييرات')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,82 +21,79 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Scaffold(
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
-          title: 'تعديل الملف الشخصي',
+          title: 'الملف الشخصي',
           onBack: () => context.go(AppRoutesNames.home),
         ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Avatar with edit overlay
-              Center(
-                child: Stack(
-                  alignment: Alignment.bottomRight,
+        body: BlocBuilder<ProfileCubit, ProfileState>(
+          builder: (context, state) {
+            if (state is ProfileLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is ProfileError) {
+              return Center(child: Text(state.message));
+            }
+            if (state is ProfileLoaded) {
+              final p = state.profile;
+              return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     CircleAvatar(
                       radius: 60.r,
-                      backgroundImage: AssetImage('assets/images/man.png'),
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage: NetworkImage(
+                        '${ConstString.baseURl}${p.photo}',
+                      ),
                     ),
-                    Container(
-                      width: 32.r,
-                      height: 32.r,
-                      decoration: BoxDecoration(
-                        color: AppColor.purple,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.r),
+                    SizedBox(height: 16.h),
+                    Text(
+                      p.name,
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColor.textDarkBlue,
                       ),
-                      child: Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 18.r,
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      p.email,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColor.textDarkBlue.withValues(alpha: 0.7),
                       ),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    InfoCardWidget(
+                      icon: Icons.phone,
+                      label: 'رقم الجوال',
+                      value: p.phone,
+                    ),
+                    InfoCardWidget(
+                      icon: Icons.cake,
+                      label: 'تاريخ الميلاد',
+                      value: p.birthday,
+                    ),
+                    InfoCardWidget(
+                      icon: Icons.person,
+                      label: 'الجنس',
+                      value: p.gender == 'male' ? 'ذكر' : 'أنثى',
+                    ),
+                    InfoCardWidget(
+                      icon: Icons.star,
+                      label: 'النقاط',
+                      value: p.points.toString(),
                     ),
                   ],
                 ),
-              ),
-              SizedBox(height: 24.h),
-
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    CustomTextFormField(
-                      controller: _nameCtl,
-                      hintText: 'الاسم الكامل',
-                      validator: (v) =>
-                      (v == null || v.isEmpty) ? 'هذا الحقل مطلوب' : null,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    CustomPasswordFormField(
-                      controller: _passwordCtl,
-                      hintText: 'كلمة المرور',
-                      validator: (v) =>
-                      (v == null || v.isEmpty) ? 'هذا الحقل مطلوب' : null,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    CustomTextFormField(
-                      controller: _phoneCtl,
-                      hintText: 'رقم الجوال',
-                      keyboardType: TextInputType.phone,
-                      validator: (v) =>
-                      (v == null || v.isEmpty) ? 'هذا الحقل مطلوب' : null,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 32.h),
-
-              CustomButton(
-                text: 'حفظ التغييرات',
-                onPressed: _saveChanges,
-              ),
-            ],
-          ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
         ),
       ),
     );
   }
 }
+

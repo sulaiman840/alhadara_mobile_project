@@ -1,4 +1,5 @@
 // lib/features/forum/presentation/screens/forum_detail_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -60,8 +61,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColor.purple,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24.r)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
             onPressed: () {
@@ -88,10 +88,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'إلغاء',
-              style: TextStyle(color: AppColor.white),
-            ),
+            child: const Text('إلغاء', style: TextStyle(color: AppColor.white)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -99,14 +96,21 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
               ctx.read<ForumCubit>().removeAnswer(widget.sectionId, aId);
               Navigator.pop(ctx);
             },
-            child: const Text(
-              'حذف',
-              style: TextStyle(color: AppColor.white),
-            ),
+            child: const Text('حذف', style: TextStyle(color: AppColor.white)),
           ),
         ],
       ),
     );
+  }
+
+  void _submitAnswer() {
+    final txt = _answerCtl.text.trim();
+    if (txt.isNotEmpty) {
+      context
+          .read<ForumCubit>()
+          .addAnswer(widget.sectionId, widget.questionId, txt);
+      _answerCtl.clear();
+    }
   }
 
   @override
@@ -114,11 +118,9 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: AppColor.background,
-        appBar: CustomAppBar(
-          title: 'تفاصيل السؤال',
-          onBack: () => context.pop(),
-        ),
+        appBar: CustomAppBar(title: 'تفاصيل السؤال'),
         body: FutureBuilder<int>(
           future: _meIdFuture,
           builder: (ctx, userSnap) {
@@ -134,14 +136,14 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                 if (state is ForumError) {
                   return Center(child: Text(state.message));
                 }
-                final q = (state as ForumLoaded)
+                final question = (state as ForumLoaded)
                     .questions
-                    .firstWhere((e) => e.id == widget.questionId);
+                    .firstWhere((q) => q.id == widget.questionId);
 
                 return ListView(
                   padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                   children: [
-                    // Question Card
+                    // Question card
                     Card(
                       color: AppColor.purple,
                       shape: RoundedRectangleBorder(
@@ -158,12 +160,12 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                                 CircleAvatar(
                                   radius: 20.r,
                                   backgroundImage: NetworkImage(
-                                    '${ConstString.baseURl}${q.user.photo}',
+                                    '${ConstString.baseURl}${question.user.photo}',
                                   ),
                                 ),
                                 SizedBox(width: 12.w),
                                 Text(
-                                  q.user.name,
+                                  question.user.name,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 14.sp,
@@ -174,19 +176,17 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                             ),
                             SizedBox(height: 12.h),
                             Text(
-                              q.content,
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: Colors.white,
-                              ),
+                              question.content,
+                              style: TextStyle(fontSize: 16.sp, color: Colors.white),
                             ),
                           ],
                         ),
                       ),
                     ),
                     SizedBox(height: 24.h),
-                    // Answers List
-                    ...q.answers.map((a) {
+
+                    // Answers list
+                    ...question.answers.map((a) {
                       final isMine = a.user.id == meId;
                       return Padding(
                         padding: EdgeInsets.only(bottom: 16.h),
@@ -226,29 +226,24 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                                     color: AppColor.white,
                                     onSelected: (v) {
                                       if (v == 'edit')
-                                        _showEditAnswerDialog(
-                                            ctx, a.id, a.content);
+                                        _showEditAnswerDialog(ctx, a.id, a.content);
                                       else if (v == 'delete')
                                         _confirmDeleteAnswer(ctx, a.id);
                                     },
                                     itemBuilder: (_) => const [
                                       PopupMenuItem(
                                         value: 'edit',
-                                        child: Text(
-                                          'تعديل',
-                                          style: TextStyle(
-                                              color: AppColor.textDarkBlue,
-                                              fontWeight: FontWeight.bold),
-                                        ),
+                                        child: Text('تعديل',
+                                            style: TextStyle(
+                                                color: AppColor.textDarkBlue,
+                                                fontWeight: FontWeight.bold)),
                                       ),
                                       PopupMenuItem(
                                         value: 'delete',
-                                        child: Text(
-                                          'حذف',
-                                          style: TextStyle(
-                                              color: AppColor.textDarkBlue,
-                                              fontWeight: FontWeight.bold),
-                                        ),
+                                        child: Text('حذف',
+                                            style: TextStyle(
+                                                color: AppColor.textDarkBlue,
+                                                fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ),
@@ -264,40 +259,38 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
             );
           },
         ),
-        bottomNavigationBar: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          color: AppColor.background,
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _answerCtl,
-                  decoration: InputDecoration(
-                    hintText: 'أضف إجابة...',
-                    hintStyle: TextStyle(color: AppColor.textDarkBlue),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24.r),
+
+        // bottomSheet lifts above the keyboard automatically
+        bottomSheet: SafeArea(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            color: AppColor.background,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _answerCtl,keyboardType: TextInputType.text,
+                    style: TextStyle(
+                      color: AppColor.textDarkBlue,
+                      fontSize: 16.sp,
                     ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+                    decoration: InputDecoration(
+                      hintText: 'أضف إجابة...',
+                      hintStyle: TextStyle(color: AppColor.textDarkBlue),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24.r),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(width: 8.w),
-              IconButton(
-                icon: Icon(Icons.send, color: AppColor.purple),
-                onPressed: () {
-                  final txt = _answerCtl.text.trim();
-                  if (txt.isNotEmpty) {
-                    context.read<ForumCubit>().addAnswer(
-                      widget.sectionId,
-                      widget.questionId,
-                      txt,
-                    );
-                    _answerCtl.clear();
-                  }
-                },
-              ),
-            ],
+                SizedBox(width: 8.w),
+                IconButton(
+                  icon: Icon(Icons.send, color: AppColor.purple),
+                  onPressed: _submitAnswer,
+                ),
+              ],
+            ),
           ),
         ),
       ),

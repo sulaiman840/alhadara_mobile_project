@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../home/data/models/course_model.dart';
@@ -39,15 +37,6 @@ class _SectionsPageState extends State<SectionsPage> {
       child: Scaffold(
         appBar: CustomAppBar(
           title: 'الشُعب المتاحة للكورس',
-          onBack: () {
-            context.go(
-              AppRoutesNames.courseDetails,
-              extra: {
-                'course': widget.course,
-                'deptName': widget.deptName,
-              },
-            );
-          },
         ),
         backgroundColor: AppColor.background,
         body: Padding(

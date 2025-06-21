@@ -1,3 +1,4 @@
+// lib/features/home/data/models/course_model.dart
 
 import 'package:equatable/equatable.dart';
 
@@ -5,7 +6,7 @@ class CourseModel extends Equatable {
   final int id;
   final String name;
   final String description;
-  final String photo;      
+  final String photo;
   final int departmentId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -20,6 +21,18 @@ class CourseModel extends Equatable {
     required this.updatedAt,
   });
 
+  /// Converts this CourseModel into a JSON‐serializable map.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'description': description,
+    'photo': photo,
+    'department_id': departmentId,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
+
+  /// Reconstructs a CourseModel from a map (e.g. from JSON or GoRouter extra).
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
       id: json['id'] as int,
@@ -33,5 +46,13 @@ class CourseModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, description, photo, departmentId, createdAt, updatedAt];
+  List<Object?> get props => [
+    id,
+    name,
+    description,
+    photo,
+    departmentId,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -58,16 +58,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             backgroundColor: AppColor.background,
             appBar: CustomAppBar(
               title: 'تفاصيل الكورس',
-              onBack: () {
-                // We know: widget.course.departmentId  and  widget.deptName
-                context.go(
-                  AppRoutesNames.coursesList,
-                  extra: {
-                    'id': widget.course.departmentId,
-                    'name': widget.deptName,
-                  },
-                );
-              },
             ),
             body: CustomScrollView(
               slivers: [
@@ -117,7 +107,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       height: forumPx,
                       child: OutlinedButton(
                         onPressed: () {
-                          context.go(
+                          context.push(
                             AppRoutesNames.pendingSections,
                             extra: {
                               'course': widget.course,

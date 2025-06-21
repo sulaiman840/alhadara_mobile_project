@@ -67,7 +67,6 @@ class _MenuPageState extends State<MenuPage> {
           backgroundColor: AppColor.background,
           appBar: CustomAppBar(
             title: 'الحساب',
-            onBack: () => context.go(AppRoutesNames.home),
           ),
           body: Stack(
             children: [
@@ -148,7 +147,7 @@ class _MenuPageState extends State<MenuPage> {
                               size: 16.r,
                               color: AppColor.gray3,
                             ),
-                            onTap: () => context.go(item.route),
+                            onTap: () => context.push(item.route),
                           );
                         },
                       ),
@@ -236,7 +235,7 @@ class _MenuItem {
 
 const _menuItems = [
   _MenuItem(label: 'الهدايا', icon: FontAwesomeIcons.gift, route: AppRoutesNames.gifts),
-  _MenuItem(label: 'الكورسات المكتملة', icon: FontAwesomeIcons.circleCheck, route: AppRoutesNames.finishedCourses),
+  _MenuItem(label: 'اعلانات المعهد', icon: FontAwesomeIcons.circleCheck, route: AppRoutesNames.activeAds),
   _MenuItem(label: 'نتائج اختباري', icon: FontAwesomeIcons.clipboardList, route: AppRoutesNames.testResults),
   _MenuItem(label: 'الإعدادات', icon: FontAwesomeIcons.gear, route: AppRoutesNames.settings),
   _MenuItem(label: 'المساعدة والدعم', icon: FontAwesomeIcons.circleQuestion, route: AppRoutesNames.complaints),

@@ -51,7 +51,6 @@ class _FinishedCoursesPageState extends State<FinishedCoursesPage> {
         backgroundColor: AppColor.background,
         appBar: CustomAppBar(
           title: 'الكورسات المنتهية',
-          onBack: () => context.go(AppRoutesNames.menu_page),
         ),
         body: SafeArea(
           child: Padding(

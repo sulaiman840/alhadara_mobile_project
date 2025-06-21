@@ -32,7 +32,7 @@ class GiftsPage extends StatelessWidget {
           backgroundColor: AppColor.background,
           appBar: CustomAppBar(
             title: 'الهدايا',
-            onBack: () => context.go(AppRoutesNames.menu_page),
+
           ),
           body: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
