@@ -20,7 +20,7 @@ class CoursesCubit extends Cubit<CoursesState> {
     emit(CoursesLoading());
     try {
       final list = await _repository.fetchCoursesByDepartment(departmentId);
-      _allCourses = list;                // ← store locally
+      _allCourses = list;
       emit(CoursesSuccess(list));
     } on DioException catch (e) {
       String msg = 'حدث خطأ أثناء جلب الكورسات';

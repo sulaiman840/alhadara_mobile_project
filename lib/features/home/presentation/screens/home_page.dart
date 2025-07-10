@@ -12,14 +12,11 @@ import '../../cubit/points_cubit.dart';
 import '../../cubit/points_state.dart';
 import '../../cubit/departments_cubit.dart';
 import '../../cubit/departments_state.dart';
+import '../../cubit/recommendations_cubit.dart';
+import '../../cubit/recommendations_state.dart';
 import '../../data/models/department_model.dart';
 
-class _Course {
-  final String image;
-  final String title;
 
-  const _Course({required this.image, required this.title});
-}
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -29,13 +26,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<_Course> _suggested = const [
-    _Course(image: 'assets/images/programming.jpg', title: 'مبادئ البرمجة'),
-    _Course(image: 'assets/images/cooking.jpg', title: 'كورس الطبخ'),
-    _Course(image: 'assets/images/English.jpg', title: 'كورس إنجليزي'),
-    _Course(image: 'assets/images/tourism.jpg', title: 'مبادئ السياحة'),
-    _Course(image: 'assets/images/Adobe.png', title: 'كورس التصميم'),
-  ];
+
 
   @override
   void initState() {
@@ -53,9 +44,12 @@ class _HomePageState extends State<HomePage> {
       if (myCourses.state is MyCoursesInitial) {
         myCourses.fetchMyCourses();
       }
+      final recommendedCourses = context.read<RecommendationsCubit>();
+      if (recommendedCourses.state is RecommendationsInitial) {
+        recommendedCourses.fetchRecommendations();
+      }
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +77,7 @@ class _HomePageState extends State<HomePage> {
                   context.read<PointsCubit>().loadPoints(),
                   context.read<DepartmentsCubit>().fetchDepartments(),
                   context.read<MyCoursesCubit>().fetchMyCourses(),
+                  context.read<RecommendationsCubit>().fetchRecommendations(),
                 ]);
               },
               child: SingleChildScrollView(
@@ -104,7 +99,7 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(height: 24.h),
                     _buildSectionTitle('كورسات مقترحة'),
                     SizedBox(height: 12.h),
-                    _buildSuggestedGrid(),
+                    _buildRecommendedGrid(),
                     SizedBox(height: 24.h),
                   ],
                 ),
@@ -354,17 +349,16 @@ class _HomePageState extends State<HomePage> {
                           width: 55.r,
                           height: 48.r,
                           fit: BoxFit.cover,
-                          errorBuilder: (ctx, error, stack) =>
-                              Container(
-                                width: 48.r,
-                                height: 48.r,
-                                color: Colors.grey[200],
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 24.r,
-                                  color: AppColor.gray3,
-                                ),
-                              ),
+                          errorBuilder: (ctx, error, stack) => Container(
+                            width: 48.r,
+                            height: 48.r,
+                            color: Colors.grey[200],
+                            child: Icon(
+                              Icons.broken_image,
+                              size: 24.r,
+                              color: AppColor.gray3,
+                            ),
+                          ),
                           loadingBuilder: (ctx, child, progress) {
                             if (progress == null) return child;
                             return Container(
@@ -376,7 +370,7 @@ class _HomePageState extends State<HomePage> {
                                   strokeWidth: 2,
                                   value: progress.expectedTotalBytes != null
                                       ? progress.cumulativeBytesLoaded /
-                                      (progress.expectedTotalBytes!)
+                                          (progress.expectedTotalBytes!)
                                       : null,
                                 ),
                               ),
@@ -455,38 +449,34 @@ class _HomePageState extends State<HomePage> {
                         itemBuilder: (_, i) {
                           final e = list[i];
                           final img = '${ConstString.baseURl}${e.course.photo}';
-                          return
-                            GestureDetector(
-                                onTap: () =>
-                                    context.pushNamed(
-                                      'myCourseDetails',
-                                      pathParameters: {
-                                        'enrolledId': e.id.toString(),
-                                      },
-                                    ),
-                                child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment
-                                        .start,
-                                    children: [
-                                      ClipRRect(
-                                          borderRadius:
-                                          BorderRadius.circular(12.r),
-                                          child: Image.network(img,
-                                              width: 120.w,
-                                              height: 120.h,
-                                              fit: BoxFit.cover)),
-                                      SizedBox(height: 8.h),
-                                      SizedBox(
-                                          width: 120.w,
-                                          child: Text(e.course.name,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                  color: AppColor.textDarkBlue,
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight
-                                                      .w500))),
-                                    ]));
+                          return GestureDetector(
+                              onTap: () => context.pushNamed(
+                                    'myCourseDetails',
+                                    pathParameters: {
+                                      'enrolledId': e.id.toString(),
+                                    },
+                                  ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                        child: Image.network(img,
+                                            width: 120.w,
+                                            height: 120.h,
+                                            fit: BoxFit.cover)),
+                                    SizedBox(height: 8.h),
+                                    SizedBox(
+                                        width: 120.w,
+                                        child: Text(e.course.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                color: AppColor.textDarkBlue,
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w500))),
+                                  ]));
                         })),
                 Align(
                     alignment: Alignment.centerLeft,
@@ -499,46 +489,93 @@ class _HomePageState extends State<HomePage> {
         return SizedBox.shrink();
       });
 
-  Widget _buildSuggestedGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      itemCount: _suggested.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12.h,
-        crossAxisSpacing: 12.w,
-        childAspectRatio: 1,
-      ),
-      itemBuilder: (_, i) {
-        final c = _suggested[i];
-        return GestureDetector(
-          onTap: () {
-            context.push(AppRoutesNames.myTestDetails);
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: Image.asset(c.image, fit: BoxFit.cover),
-                ),
+  Widget _buildRecommendedGrid() {
+    return BlocBuilder<RecommendationsCubit, RecommendationsState>(
+      builder: (context, state) {
+        if (state is RecommendationsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is RecommendationsFailure) {
+          return Center(
+            child: Text(
+              state.errorMessage,
+              style: TextStyle(color: AppColor.textDarkBlue, fontSize: 14.sp),
+            ),
+          );
+        }
+        if (state is RecommendationsSuccess) {
+          final courses = state.courses;
+          if (courses.isEmpty) {
+            return Center(
+              child: Text(
+                'لا توجد توصيات حالياً',
+                style: TextStyle(color: AppColor.textDarkBlue, fontSize: 14.sp),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                c.title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColor.purple,
-                  fontWeight: FontWeight.w500,
+            );
+          }
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: courses.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12.h,
+              crossAxisSpacing: 12.w,
+              childAspectRatio: 1,
+            ),
+            itemBuilder: (_, i) {
+              final c = courses[i];
+              final imageUrl = c.photo.isNotEmpty
+                  ? '${ConstString.baseURl}${c.photo}'
+                  : null;
+
+              return GestureDetector(
+                onTap: () {
+                  context.pushNamed(
+                    'courseDetails',
+                    extra: {
+                      'course': c.toJson(),
+                      'deptName': '',
+                    },
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: imageUrl != null
+                            ? Image.network(imageUrl, fit: BoxFit.cover)
+                            : Container(
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 48.r,
+                                  color: AppColor.gray3,
+                                ),
+                              ),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      c.name,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColor.textDarkBlue,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        );
+              );
+            },
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }

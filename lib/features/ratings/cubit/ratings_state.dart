@@ -1,12 +1,10 @@
-// lib/features/ratings/cubit/ratings_state.dart
 import 'package:equatable/equatable.dart';
 import '../data/models/rating_model.dart';
 import '../data/models/ratings_page_model.dart';
 
 abstract class RatingsState extends Equatable {
   const RatingsState();
-  @override
-  List<Object?> get props => [];
+  @override List<Object?> get props => [];
 }
 
 class RatingsInitial extends RatingsState {}

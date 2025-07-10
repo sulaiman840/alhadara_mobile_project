@@ -27,12 +27,15 @@ import '../features/gifts/data/repositories/gifts_repository.dart';
 import '../features/home/cubit/courses_cubit.dart';
 import '../features/home/cubit/departments_cubit.dart';
 import '../features/home/cubit/points_cubit.dart';
+import '../features/home/cubit/recommendations_cubit.dart';
 import '../features/home/data/datasources/courses_remote_data_source.dart';
 import '../features/home/data/datasources/departments_remote_data_source.dart';
 import '../features/home/data/datasources/points_remote_data_source.dart';
+import '../features/home/data/datasources/recommendations_remote_data_source.dart';
 import '../features/home/data/repositories/courses_repository.dart';
 import '../features/home/data/repositories/departments_repository.dart';
 import '../features/home/data/repositories/points_repository.dart';
+import '../features/home/data/repositories/recommendations_repository.dart';
 import '../features/menu/cubit/logout_cubit/logout_cubit.dart';
 import '../features/my_course_details/cubit/my_courses_cubit.dart';
 import '../features/my_course_details/cubit/quiz_cubit.dart';
@@ -52,6 +55,9 @@ import '../features/ratings/data/repositories/ratings_repository.dart';
 import '../features/saved courses/cubit/saved_courses_cubit.dart';
 import '../features/saved courses/data/datasources/saved_courses_remote_data_source.dart';
 import '../features/saved courses/data/repositories/saved_courses_repository.dart';
+import '../features/search/cubit/search_cubit.dart';
+import '../features/search/data/datasources/search_remote_data_source.dart';
+import '../features/search/data/repositories/search_repository.dart';
 import '../features/test_results/cubit/grades_cubit.dart';
 import '../features/test_results/data/datasources/grades_remote_data_source.dart';
 import '../features/test_results/data/repositories/grades_repository.dart';
@@ -275,7 +281,35 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<AdsCubit>(
         () => AdsCubit(getIt<AdsRepository>()),
   );
+
   //////////////////
+
+  getIt.registerLazySingleton<RecommendationsRemoteDataSource>(
+        () => RecommendationsRemoteDataSourceImpl(getIt<ApiService>()),
+  );
+
+
+  getIt.registerLazySingleton<RecommendationsRepository>(
+        () => RecommendationsRepositoryImpl(getIt<RecommendationsRemoteDataSource>()),
+  );
+
+
+  getIt.registerLazySingleton<RecommendationsCubit>(
+        () => RecommendationsCubit(getIt<RecommendationsRepository>()),
+  );
+
+  //////////////////
+  getIt.registerLazySingleton<SearchRemoteDataSource>(
+        () => SearchRemoteDataSourceImpl(getIt<ApiService>()),
+  );
+  getIt.registerLazySingleton<SearchRepository>(
+        () => SearchRepositoryImpl(getIt<SearchRemoteDataSource>()),
+  );
+  getIt.registerFactory<SearchCubit>(
+        () => SearchCubit(getIt<SearchRepository>()),
+  );
+  //////////////////
+
   getIt.registerLazySingleton<RatingsRemoteDataSource>(
         () => RatingsRemoteDataSourceImpl(getIt<ApiService>()),
   );
@@ -285,7 +319,6 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<RatingsCubit>(
         () => RatingsCubit(getIt<RatingsRepository>()),
   );
-  //////////////////
 }
 
 

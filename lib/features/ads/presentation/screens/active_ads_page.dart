@@ -1,7 +1,7 @@
-// lib/features/ads/presentation/screens/active_ads_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../ads/cubit/ads_cubit.dart';
 import '../../../ads/cubit/ads_state.dart';
 import '../../../../core/utils/app_colors.dart';
@@ -27,10 +27,8 @@ class _ActiveAdsPageState extends State<ActiveAdsPage> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
-        appBar: AppBar(
-          title: const Text('الإعلانات'),
-          backgroundColor: AppColor.purple,
-          elevation: 0,
+        appBar: CustomAppBar(
+          title: 'الإعلانات',
         ),
         body: BlocBuilder<AdsCubit, AdsState>(
           builder: (ctx, state) {
@@ -63,8 +61,9 @@ class _ActiveAdsPageState extends State<ActiveAdsPage> {
                 separatorBuilder: (_, __) => SizedBox(height: 12.h),
                 itemBuilder: (_, i) {
                   final ad = ads[i];
-                  final imageUrl = ad.photo?.isNotEmpty == true
-                      ? '${ConstString.baseURl}/storage/${ad.photo}'
+                  // Build the correct URL: baseURL + photo path
+                  final imageUrl = ad.photo != null && ad.photo!.isNotEmpty
+                      ? '${ConstString.baseURl}${ad.photo}'
                       : null;
 
                   return Card(
@@ -77,7 +76,6 @@ class _ActiveAdsPageState extends State<ActiveAdsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // only show image if we have a valid URL
                         if (imageUrl != null)
                           ClipRRect(
                             borderRadius: BorderRadius.vertical(
@@ -95,7 +93,7 @@ class _ActiveAdsPageState extends State<ActiveAdsPage> {
                                     child: CircularProgressIndicator(
                                       value: prog.expectedTotalBytes != null
                                           ? prog.cumulativeBytesLoaded /
-                                          prog.expectedTotalBytes!
+                                              prog.expectedTotalBytes!
                                           : null,
                                     ),
                                   ),
@@ -109,8 +107,6 @@ class _ActiveAdsPageState extends State<ActiveAdsPage> {
                               ),
                             ),
                           ),
-
-                        // text content
                         Padding(
                           padding: EdgeInsets.all(16.w),
                           child: Column(

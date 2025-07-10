@@ -1,51 +1,38 @@
+// lib/features/trainers/presentation/screens/trainer_details_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
-import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../ratings/cubit/ratings_cubit.dart';
-import '../../../ratings/cubit/ratings_state.dart';
 import '../../data/models/trainer_with_course_model.dart';
 
 class TrainerDetailsPage extends StatelessWidget {
-  final TrainerWithCourse trainerWithCourse;
+  final Trainer trainer;
+  final List<Course> courses;
+
   const TrainerDetailsPage({
     Key? key,
-    required this.trainerWithCourse,
+    required this.trainer,
+    required this.courses,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final t = trainerWithCourse.trainer;
-    final c = trainerWithCourse.course;
-    // build full URLs or fall back to placeholder asset
-    final photoUrl = t.photo != null
-        ? '${ConstString.baseURl}${t.photo}'
+    // Banner photo
+    final photoUrl = trainer.photo != null
+        ? '${ConstString.baseURl}${trainer.photo}'
         : 'assets/images/placeholder.png';
-    final courseImageUrl = c.photo.isNotEmpty
-        ? '${ConstString.baseURl}${c.photo}'
-        : 'assets/images/placeholder.png';
-    // format the created date as “duration”
-    final duration = '${c.createdAt.day}/${c.createdAt.month}/${c.createdAt.year}';
-
-    // our “mock” list of courses (API only has one per trainer)
-    final courses = [c];
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
-        appBar: CustomAppBar(
-          title: 'تفاصيل المدرب',
-        ),
+        appBar: CustomAppBar(title: 'تفاصيل المدرب'),
         body: CustomScrollView(
           slivers: [
-            // ── Banner ─────────────────────────────
             SliverAppBar(
               pinned: false,
               expandedHeight: 250.h,
@@ -58,8 +45,6 @@ class TrainerDetailsPage extends StatelessWidget {
                     : Image.asset(photoUrl, fit: BoxFit.contain),
               ),
             ),
-
-            // ── Details + Courses ──────────────────
             SliverToBoxAdapter(
               child: Container(
                 decoration: BoxDecoration(
@@ -72,9 +57,9 @@ class TrainerDetailsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Trainer Info
+                    // Trainer info
                     Text(
-                      t.name,
+                      trainer.name,
                       style: TextStyle(
                         fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
@@ -83,12 +68,12 @@ class TrainerDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      t.specialization,
+                      trainer.specialization,
                       style: TextStyle(fontSize: 14.sp, color: AppColor.gray3),
                     ),
                     SizedBox(height: 16.h),
 
-                    // Bio / experience
+                    // Bio
                     Text(
                       'نبذة عن المدرب',
                       style: TextStyle(
@@ -99,7 +84,7 @@ class TrainerDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      t.experience,
+                      trainer.experience,
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: AppColor.textDarkBlue,
@@ -107,117 +92,9 @@ class TrainerDetailsPage extends StatelessWidget {
                       ),
                     ),
 
-// // ── Ratings header ─────────────────────────
-//                     SizedBox(height: 24.h),
-//                     Text(
-//                       'تقييم المدرب',
-//                       style: TextStyle(
-//                         fontSize: 18.sp,
-//                         fontWeight: FontWeight.bold,
-//                         color: AppColor.textDarkBlue,
-//                       ),
-//                     ),
-//                     SizedBox(height: 12.h),
-//
-// // ── Ratings list / average ─────────────────
-//                     BlocBuilder<RatingsCubit, RatingsState>(
-//                       builder: (ctx, state) {
-//                         if (state is RatingsLoading) {
-//                           return const Center(child: CircularProgressIndicator());
-//                         }
-//                         if (state is RatingsFailure) {
-//                           print(state.message);
-//                           return Text(state.message, style: TextStyle(color: Colors.red));
-//                         }
-//                         if (state is RatingsLoaded) {
-//                           return Column(
-//                             crossAxisAlignment: CrossAxisAlignment.stretch,
-//                             children: [
-//                               // Average rating
-//                               Text(
-//                                 'متوسط التقييم: ${state.page.averageRating.toStringAsFixed(1)} ★',
-//                                 style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500),
-//                               ),
-//                               SizedBox(height: 8.h),
-//                               // Individual ratings
-//                               ...state.page.ratings.map((r) => Padding(
-//                                 padding: EdgeInsets.only(bottom: 8.h),
-//                                 child: ListTile(
-//                                   leading: CircleAvatar(
-//                                     backgroundImage: NetworkImage(
-//                                       '${ConstString.baseURl}${r.student.photo}',
-//                                     ),
-//                                   ),
-//                                   title: Text(
-//                                     r.comment,
-//                                     style: TextStyle(fontSize: 14.sp),
-//                                   ),
-//                                   subtitle: Text('${r.student.name} • ${r.rating} ★'),
-//                                 ),
-//                               )),
-//                             ],
-//                           );
-//                         }
-//                         return const SizedBox.shrink();
-//                       },
-//                     ),
-//
-// // ── “Rate Trainer” button ───────────────────
-//                     SizedBox(height: 16.h),
-//                     ElevatedButton(
-//                       onPressed: () async {
-//                         final cubit = context.read<RatingsCubit>();
-//                         final result = await showDialog<_RatingInput>(
-//                           context: context,
-//                           builder: (_) {
-//                             var _stars = 5;
-//                             var _commentCtl = TextEditingController();
-//                             return AlertDialog(
-//                               title: const Text('قيم المدرب'),
-//                               content: Column(
-//                                 mainAxisSize: MainAxisSize.min,
-//                                 children: [
-//                                   // simple star picker:
-//                                   DropdownButton<int>(
-//                                     value: _stars,
-//                                     items: List.generate(5, (i) => i+1)
-//                                         .map((s) => DropdownMenuItem(value: s, child: Text('$s ★')))
-//                                         .toList(),
-//                                     onChanged: (v) => _stars = v ?? 5,
-//                                   ),
-//                                   TextField(
-//                                     controller: _commentCtl,
-//                                     decoration: const InputDecoration(labelText: 'تعليقك'),
-//                                   ),
-//                                 ],
-//                               ),
-//                               actions: [
-//                                 TextButton(onPressed: () => Navigator.pop(_, null), child: const Text('إلغاء')),
-//                                 ElevatedButton(
-//                                   onPressed: () => Navigator.pop(_, _RatingInput(_stars, _commentCtl.text)),
-//                                   child: const Text('إرسال'),
-//                                 ),
-//                               ],
-//                             );
-//                           },
-//                         );
-//
-//                         if (result != null) {
-//                           await cubit.submitTrainerRating(
-//                             trainerId: trainerWithCourse.trainer.id,
-//                             sectionId: trainerWithCourse.course.id,
-//                             rating: result.stars,
-//                             comment: result.comment,
-//                           );
-//                           // refresh after submit:
-//                           cubit.loadTrainerRatings(trainerWithCourse.trainer.id, trainerWithCourse.course.id);
-//                         }
-//                       },
-//                       child: const Text('قيم المدرب'),
-//                     ),
                     SizedBox(height: 24.h),
 
-                    // Courses Header
+                    // Courses header
                     Text(
                       'كورسات (${courses.length})',
                       style: TextStyle(
@@ -228,13 +105,19 @@ class TrainerDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 16.h),
 
-                    // Course items
+                    // List all courses
                     ...courses.map((course) {
+                      final courseImageUrl = course.photo.isNotEmpty
+                          ? '${ConstString.baseURl}${course.photo}'
+                          : 'assets/images/placeholder.png';
+                      final duration =
+                          '${course.createdAt.day}/${course.createdAt.month}/${course.createdAt.year}';
+
                       return Padding(
                         padding: EdgeInsets.only(bottom: 16.h),
                         child: InkWell(
                           onTap: () {
-                            // TODO: navigate to course details if desired
+                            // TODO: navigate to course details
                           },
                           borderRadius: BorderRadius.circular(12.r),
                           child: Container(
@@ -252,7 +135,6 @@ class TrainerDetailsPage extends StatelessWidget {
                             padding: EdgeInsets.all(12.w),
                             child: Row(
                               children: [
-                                // Course thumbnail
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8.r),
                                   child: courseImageUrl.startsWith('http')
@@ -270,8 +152,6 @@ class TrainerDetailsPage extends StatelessWidget {
                                   ),
                                 ),
                                 SizedBox(width: 12.w),
-
-                                // Title + duration
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,8 +177,6 @@ class TrainerDetailsPage extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-
-                                // Arrow icon
                                 Icon(
                                   Icons.arrow_forward_ios,
                                   size: 16.r,
@@ -321,9 +199,4 @@ class TrainerDetailsPage extends StatelessWidget {
       ),
     );
   }
-}
-class _RatingInput {
-  final int stars;
-  final String comment;
-  _RatingInput(this.stars, this.comment);
 }

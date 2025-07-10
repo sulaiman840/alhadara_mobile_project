@@ -1,3 +1,5 @@
+// lib/features/trainers/data/models/trainer_with_course_model.dart
+
 class TrainerWithCourse {
   final int trainerId;
   final Trainer trainer;
@@ -16,15 +18,24 @@ class TrainerWithCourse {
       course: Course.fromJson(json['course'] as Map<String, dynamic>),
     );
   }
-}
 
+  Map<String, dynamic> toJson() => {
+    'trainer_id': trainerId,
+    'trainer': trainer.toJson(),
+    'course': course.toJson(),
+  };
+}
 
 class Trainer {
   final int id;
-  final String name, email, phone;
+  final String name;
+  final String email;
+  final String phone;
   final String? photo;
-  final String birthday;       // ← change to String
-  final String gender, specialization, experience;
+  final String birthday;
+  final String gender;
+  final String specialization;
+  final String experience;
 
   Trainer({
     required this.id,
@@ -38,32 +49,48 @@ class Trainer {
     required this.experience,
   });
 
-  factory Trainer.fromJson(Map<String, dynamic> json) {
-    return Trainer(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String,
-      photo: json['photo'] as String?,
-      birthday: json['birthday'] as String,         // ← no parse
-      gender: json['gender'] as String,
-      specialization: json['specialization'] as String,
-      experience: json['experience'] as String,
-    );
-  }
+  factory Trainer.fromJson(Map<String, dynamic> json) => Trainer(
+    id: json['id'] as int,
+    name: json['name'] as String,
+    email: json['email'] as String,
+    phone: json['phone'] as String,
+    photo: json['photo'] as String?,
+    birthday: json['birthday'] as String,
+    gender: json['gender'] as String,
+    specialization: json['specialization'] as String,
+    experience: json['experience'] as String,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'email': email,
+    'phone': phone,
+    if (photo != null) 'photo': photo,
+    'birthday': birthday,
+    'gender': gender,
+    'specialization': specialization,
+    'experience': experience,
+  };
 }
 
 class Course {
   final int id;
-  final String name, description, photo;
+  final String name;
+  final String description;
+  final String photo;
   final int departmentId;
-  final DateTime createdAt, updatedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Course({
-    required this.id, required this.name,
-    required this.description, required this.photo,
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.photo,
     required this.departmentId,
-    required this.createdAt, required this.updatedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory Course.fromJson(Map<String, dynamic> json) => Course(
@@ -75,6 +102,16 @@ class Course {
     createdAt: DateTime.parse(json['created_at'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
   );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'description': description,
+    'photo': photo,
+    'department_id': departmentId,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
 }
 
 /*class TrainerWithCourse {

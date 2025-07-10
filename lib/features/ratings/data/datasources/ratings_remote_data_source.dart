@@ -1,23 +1,12 @@
-// lib/features/ratings/data/datasources/ratings_remote_data_source.dart
-
 import 'package:dartz/dartz.dart';
 import '../../../../core/network/api_service.dart';
 import '../models/rating_model.dart';
 import '../models/ratings_page_model.dart';
 
 abstract class RatingsRemoteDataSource {
-  Future<Either<Exception, RatingsPageModel>> fetchTrainerRatings(int trainerId, int sectionId);
   Future<Either<Exception, RatingsPageModel>> fetchSectionRatings(int sectionId);
-  Future<Either<Exception, RatingModel>> submitTrainerRating({
-    required int trainerId,
-    required int sectionId,
-    required int rating,
-    required String comment,
-  });
   Future<Either<Exception, RatingModel>> submitSectionRating({
-    required int sectionId,
-    required int rating,
-    required String comment,
+    required int sectionId, required int rating, String? comment,
   });
 }
 
@@ -27,70 +16,41 @@ class RatingsRemoteDataSourceImpl implements RatingsRemoteDataSource {
   RatingsRemoteDataSourceImpl(this._api);
 
   @override
-  Future<Either<Exception, RatingsPageModel>> fetchTrainerRatings(int trainerId, int sectionId) async {
-    final either = await _api.get(
-      'api/trainer-rating/$trainerId/section/$sectionId/ratings',
-          (json) => RatingsPageModel.fromJson(json as Map<String, dynamic>),
-    );
-    return either.fold(
-          (failure) => left(Exception('Failed to load trainer ratings')),
-          (page)    => right(page),
-    );
-  }
-
-  @override
-  Future<Either<Exception, RatingsPageModel>> fetchSectionRatings(int sectionId) async {
-    final either = await _api.get(
+  Future<Either<Exception, RatingsPageModel>> fetchSectionRatings(
+      int sectionId) async {
+    final res = await _api.get(
       'api/section-rating/$sectionId/ratings',
           (json) => RatingsPageModel.fromJson(json as Map<String, dynamic>),
     );
-    return either.fold(
-          (_)   => left(Exception('Failed to load section ratings')),
-          (page) => right(page),
-    );
-  }
-
-  @override
-  Future<Either<Exception, RatingModel>> submitTrainerRating({
-    required int trainerId,
-    required int sectionId,
-    required int rating,
-    required String comment,
-  }) async {
-    final either = await _api.post(
-      'api/trainer-rating/rate',
-      {
-        'trainer_id': trainerId,
-        'course_section_id': sectionId,
-        'rating': rating,
-        'comment': comment,
-      },
-          (json) => RatingModel.fromJson((json as Map<String, dynamic>)['data']),
-    );
-    return either.fold(
-          (_)      => left(Exception('Failed to submit trainer rating')),
-          (rating) => right(rating),
-    );
+    return res.fold((_) => left(Exception('Failed to load ratings')), right);
   }
 
   @override
   Future<Either<Exception, RatingModel>> submitSectionRating({
     required int sectionId,
     required int rating,
-    required String comment,
+    String? comment,
   }) async {
-    final either = await _api.post(
+    final res = await _api.post(
       'api/section-rating/rate',
       {
-        'course_section_id': sectionId,
+        'section_id': sectionId,
         'rating': rating,
-        'comment': comment,
+        if (comment != null) 'comment': comment,
       },
-          (json) => RatingModel.fromJson((json as Map<String, dynamic>)['data']),
+          (json) {
+        // 1) safely cast to a map
+        final raw = json as Map<String, dynamic>;
+
+        // 2) if your backend wraps things in "data", unwrap it; otherwise use raw
+        final payload = raw['data'] is Map<String, dynamic>
+            ? raw['data'] as Map<String, dynamic>
+            : raw;
+
+        return RatingModel.fromJson(payload);
+      },
     );
-    return either.fold(
-          (_)      => left(Exception('Failed to submit section rating')),
-          (rating) => right(rating),
-    );
+
+    return res.fold((e) => left(Exception(e.toString())), right);
   }
 }

@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
@@ -22,9 +21,7 @@ class TrainersPage extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: CustomAppBar(
-          title: 'المدربين',
-        ),
+        appBar: CustomAppBar(title: 'المدربين'),
         backgroundColor: AppColor.background,
         body: BlocBuilder<TrainersCubit, TrainersState>(
           builder: (ctx, state) {
@@ -34,14 +31,26 @@ class TrainersPage extends StatelessWidget {
             if (state is TrainersError) {
               return Center(child: Text(state.message));
             }
-            final list = (state as TrainersLoaded).trainers;
-            if (list.isEmpty) {
+
+            // Raw flat list: may contain multiple entries per trainer
+            final raw = (state as TrainersLoaded).trainers;
+
+            if (raw.isEmpty) {
               return const Center(child: Text('لا يوجد مدربين حالياً'));
             }
+
+            // 1️⃣ Build a map to dedupe by trainer ID
+            final Map<int, TrainerWithCourse> byTrainer = {};
+            for (var tc in raw) {
+              byTrainer.putIfAbsent(tc.trainer.id, () => tc);
+            }
+            // 2️⃣ Unique list of trainers
+            final unique = byTrainer.values.toList();
+
             return Padding(
               padding: EdgeInsets.all(24.w),
               child: GridView.builder(
-                itemCount: list.length,
+                itemCount: unique.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   mainAxisSpacing: 12.h,
@@ -49,15 +58,27 @@ class TrainersPage extends StatelessWidget {
                   childAspectRatio: 0.65,
                 ),
                 itemBuilder: (_, i) {
-                  final tc = list[i];
+                  final tc = unique[i];
                   final img = tc.trainer.photo != null
                       ? '${ConstString.baseURl}${tc.trainer.photo}'
                       : 'assets/images/placeholder.png';
+
                   return InkWell(
-                    onTap: () => context.push(
-                      AppRoutesNames.trainersDetails,
-                      extra: tc,
-                    ),
+                    onTap: () {
+                      // 3️⃣ Gather all courses for this trainer
+                      final courses = raw
+                          .where((e) => e.trainer.id == tc.trainer.id)
+                          .map((e) => e.course)
+                          .toList();
+                      context.push(
+                               AppRoutesNames.trainersDetails,
+                                extra: {
+                              'trainer': tc.trainer.toJson(),
+                             'courses': courses.map((c) => c.toJson()).toList(),
+                           },
+                            );
+
+                    },
                     borderRadius: BorderRadius.circular(12.r),
                     child: _TrainerCard(
                       name: tc.trainer.name,
@@ -99,12 +120,10 @@ class _TrainerCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Photo
           SizedBox(
             height: 170.h,
             child: Image.network(imageUrl, fit: BoxFit.cover),
           ),
-          // Details
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
             child: Column(

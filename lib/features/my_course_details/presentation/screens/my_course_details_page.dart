@@ -16,13 +16,14 @@ import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/pdf_viewer_page.dart';
+import '../../../ratings/cubit/ratings_cubit.dart';
+import '../../../ratings/presentation/widgets/section_rating_widget.dart';
 import '../../cubit/quiz_cubit.dart';
 import '../../cubit/quiz_state.dart';
 import '../../cubit/section_files_cubit.dart';
 import '../../cubit/section_files_state.dart';
 import '../../../my_course_details/cubit/my_courses_cubit.dart';
 import '../../../my_course_details/cubit/my_courses_state.dart';
-
 
 class MyCourseDetailsPage extends StatefulWidget {
   final int enrolledId;
@@ -64,7 +65,8 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
           onNotification: (sn) {
             if (sn.depth != 0) return false;
             final shouldPin = sn.metrics.pixels >= pinThreshold;
-            if (shouldPin != _tabsPinned) setState(() => _tabsPinned = shouldPin);
+            if (shouldPin != _tabsPinned)
+              setState(() => _tabsPinned = shouldPin);
             return false;
           },
           child: BlocBuilder<MyCoursesCubit, MyCoursesState>(
@@ -86,7 +88,7 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
   String _deriveTitle(MyCoursesState state) {
     if (state is MyCoursesSuccess) {
       final enrolled = state.courses.firstWhere(
-            (e) => e.id == widget.enrolledId,
+        (e) => e.id == widget.enrolledId,
         orElse: () => throw Exception('Course ${widget.enrolledId} not found'),
       );
       return enrolled.course.name.isNotEmpty
@@ -96,8 +98,7 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
     return 'تفاصيل الكورس';
   }
 
-  Widget _buildBody(
-      MyCoursesState state, double bannerPx, double forumPx) {
+  Widget _buildBody(MyCoursesState state, double bannerPx, double forumPx) {
     if (state is MyCoursesLoading || state is MyCoursesInitial) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -108,19 +109,17 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
     // success
     final success = state as MyCoursesSuccess;
     final enrolled = success.courses.firstWhere(
-          (e) => e.id == widget.enrolledId,
+      (e) => e.id == widget.enrolledId,
       orElse: () => throw Exception('Course ${widget.enrolledId} not found'),
     );
     final course = enrolled.course;
 
     // format dates
     final start = enrolled.startDate, end = enrolled.endDate;
-    final dateRange =
-        '${start.day}/${start.month}/${start.year} - '
+    final dateRange = '${start.day}/${start.month}/${start.year} - '
         '${end.day}/${end.month}/${end.year}';
     final created = course.createdAt;
-    final activeSince =
-        '${created.day}/${created.month}/${created.year}';
+    final activeSince = '${created.day}/${created.month}/${created.year}';
 
     final bannerUrl = course.photo.isNotEmpty
         ? '${ConstString.baseURl}${course.photo}'
@@ -134,13 +133,12 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
             borderRadius: BorderRadius.circular(12.r),
             child: bannerUrl != null
                 ? Image.network(
-              bannerUrl,
-              width: double.infinity,
-              height: bannerPx,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  _placeholderBanner(bannerPx),
-            )
+                    bannerUrl,
+                    width: double.infinity,
+                    height: bannerPx,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _placeholderBanner(bannerPx),
+                  )
                 : _placeholderBanner(bannerPx),
           ),
         ),
@@ -201,31 +199,23 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 8.w, vertical: 4.h),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
                         color: Colors.green.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Text(
                         'نشط منذ $activeSince',
-                        style:
-                        TextStyle(color: Colors.green, fontSize: 12.sp),
-                      ),
-                    ),
-                    const Spacer(),
-                    FaIcon(FontAwesomeIcons.solidStar,
-                        color: AppColor.yellow, size: 14.r),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '4.8',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColor.textDarkBlue,
+                        style: TextStyle(color: Colors.green, fontSize: 12.sp),
                       ),
                     ),
                   ],
+                ),
+                BlocProvider<RatingsCubit>(
+                  create: (_) =>
+                      getIt<RatingsCubit>()..loadSectionRatings(enrolled.id),
+                  child: SectionRatingWidget(sectionId: enrolled.id),
                 ),
                 SizedBox(height: 24.h),
               ],
@@ -247,47 +237,50 @@ class _MyCourseDetailsPageState extends State<MyCourseDetailsPage> {
         ),
 
         // ── Tab Bodies ───────────────
-        SliverFillRemaining(
-          child: TabBarView(
-            children: [
-              // 1) Info
-              CourseInfoTab(description: course.description),
 
-              // 2) Homework
-              BlocProvider<SectionFilesCubit>(
-                create: (_) =>
-                getIt<SectionFilesCubit>()..fetchFiles(enrolled.id),
-                child: HomeworkTab(sectionId: enrolled.id),
-              ),
-
-              // 3) Tests
-              BlocProvider<QuizCubit>(
-                create: (_) =>
-                getIt<QuizCubit>()..fetchQuizzes(enrolled.id),
-                child: TestsTab(sectionId: enrolled.id),
-              ),
-            ],
+// ── Tab Bodies ───────────────
+        SliverOpacity(
+          opacity: _tabsPinned ? 1.0 : 0.5,
+          sliver: SliverFillRemaining(
+            child: TabBarView(
+              children: [
+                CourseInfoTab(
+                  description: course.description,
+                  sectionId: enrolled.id,
+                ),
+                BlocProvider<SectionFilesCubit>(
+                  create: (_) =>
+                      getIt<SectionFilesCubit>()..fetchFiles(enrolled.id),
+                  child: HomeworkTab(sectionId: enrolled.id),
+                ),
+                BlocProvider<QuizCubit>(
+                  create: (_) => getIt<QuizCubit>()..fetchQuizzes(enrolled.id),
+                  child: TestsTab(sectionId: enrolled.id),
+                ),
+              ],
+            ),
           ),
-        ),
+        )
       ],
     );
   }
 
   Widget _placeholderBanner(double height) => Container(
-    width: double.infinity,
-    height: height,
-    color: Colors.grey[200],
-    child:
-    Icon(Icons.broken_image, size: 40.r, color: AppColor.gray3),
-  );
+        width: double.infinity,
+        height: height,
+        color: Colors.grey[200],
+        child: Icon(Icons.broken_image, size: 40.r, color: AppColor.gray3),
+      );
 }
-
 
 /// Tab 1: course information
 class CourseInfoTab extends StatelessWidget {
   final String description;
+  final int sectionId;
 
-  const CourseInfoTab({Key? key, required this.description}) : super(key: key);
+  const CourseInfoTab(
+      {Key? key, required this.description, required this.sectionId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -311,6 +304,8 @@ class CourseInfoTab extends StatelessWidget {
                 : 'لا توجد معلومات إضافية حول هذا الكورس حالياً.',
             style: TextStyle(fontSize: 14.sp, color: AppColor.textDarkBlue),
           ),
+          SizedBox(height: 24.h),
+
           // SizedBox(height: 16.h),
           // Text(
           //   'أهداف الكورس',

@@ -50,6 +50,7 @@ import '../../features/course_details/presentation/screens/test_details_page.dar
 import '../../features/course_sections/cubit/sections_cubit.dart';
 import '../../features/forum/cubit/forum_cubit.dart';
 import '../../features/home/cubit/courses_cubit.dart';
+import '../../features/home/cubit/recommendations_cubit.dart';
 import '../../features/home/data/models/course_model.dart';
 import '../../features/home/presentation/screens/courses_list_page.dart';
 import '../../features/home/presentation/screens/my_courses_page.dart';
@@ -60,6 +61,7 @@ import '../../features/ratings/cubit/ratings_cubit.dart';
 import '../../features/ratings/data/models/rating_model.dart';
 import '../../features/saved courses/cubit/saved_courses_cubit.dart';
 import '../../features/saved courses/presentation/screens/saved_courses_page.dart';
+import '../../features/search/cubit/search_cubit.dart';
 import '../../features/trainers/data/models/trainer_with_course_model.dart';
 import '../../features/trainers/presentation/screens/trainer_details_page.dart';
 import '../injection.dart';
@@ -78,6 +80,8 @@ class AppRouter {
               BlocProvider.value(value: getIt<PointsCubit>()),
               BlocProvider.value(value: getIt<DepartmentsCubit>()),
               BlocProvider.value(value: getIt<MyCoursesCubit>()),
+              BlocProvider.value(value: getIt<RecommendationsCubit>()),
+
             ],
             child: Builder(builder: (innerContext) {
               // `innerContext` is now under all three BlocProviders
@@ -163,6 +167,18 @@ class AppRouter {
               transitionsBuilder: (_, __, ___, child) => child,
             ),
           ),
+    GoRoute(
+      path: AppRoutesNames.search,
+     pageBuilder: (ctx, state) => CustomTransitionPage(
+       key: state.pageKey,
+        child: BlocProvider<SearchCubit>(
+          create: (_) => getIt<SearchCubit>(),
+          child: const CourseSearchPage(),
+        ),
+        transitionDuration: Duration.zero,
+        transitionsBuilder: (_, __, ___, child) => child,
+      ),
+    ),
         ],
       ),
 
@@ -228,18 +244,26 @@ class AppRouter {
         name: 'myCourseDetails',
         path: AppRoutesNames.myCourseDetails,
         pageBuilder: (ctx, state) {
-          final id = int.parse(state.pathParameters['enrolledId']!);
+          final sectionId = int.parse(state.pathParameters['enrolledId']!);
           return CustomTransitionPage(
             key: state.pageKey,
-            child: BlocProvider<MyCoursesCubit>(
-              create: (_) => getIt<MyCoursesCubit>()..fetchMyCourses(),
-              child: MyCourseDetailsPage(enrolledId: id),
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<MyCoursesCubit>(
+                  create: (_) => getIt<MyCoursesCubit>()..fetchMyCourses(),
+                ),
+                BlocProvider<RatingsCubit>(
+                  create: (_) => getIt<RatingsCubit>()..loadSectionRatings(sectionId),
+                ),
+              ],
+              child: MyCourseDetailsPage(enrolledId: sectionId),
             ),
             transitionDuration: Duration.zero,
             transitionsBuilder: (_, __, ___, child) => child,
           );
         },
       ),
+
 
       GoRoute(
         path: AppRoutesNames.coursesList,
@@ -424,11 +448,20 @@ class AppRouter {
       GoRoute(
         path: AppRoutesNames.trainersDetails,
         builder: (_, state) {
-          final trainer = state.extra as TrainerWithCourse;
-          return TrainerDetailsPage(trainerWithCourse: trainer);
+          // We pushed a Map with 'trainer' and 'courses'
+          final args = state.extra as Map<String, dynamic>;
+            final trainer =
+             Trainer.fromJson(args['trainer'] as Map<String, dynamic>);
+             final courses = (args['courses'] as List)
+                  .cast<Map<String, dynamic>>()
+                 .map((m) => Course.fromJson(m))
+                  .toList();
+          return TrainerDetailsPage(
+            trainer: trainer,
+            courses: courses,
+          );
         },
       ),
-
       GoRoute(
           path: AppRoutesNames.testDetails,
           builder: (_, __) => const TestDetailsPage()),
