@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/injection.dart';
+import '../../../../core/network/firebase_service.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../cubit/login_cubit.dart';
@@ -16,14 +18,16 @@ import '../widgets/or_divider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final GlobalKey<FormState> _formKey        = GlobalKey<FormState>();
-  final TextEditingController _emailController    = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final _firebaseService = getIt<FirebaseService>();
 
   @override
   void dispose() {
@@ -42,19 +46,23 @@ class _LoginPageState extends State<LoginPage> {
   String? _validateNotEmpty(String? v) =>
       (v == null || v.isEmpty) ? 'هذا الحقل مطلوب' : null;
 
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      FocusScope.of(context).unfocus();
-      final email    = _emailController.text.trim();
-      final password = _passwordController.text.trim();
-      const fcmToken = 'dummy_fcm_token';
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
 
-      BlocProvider.of<LoginCubit>(context).login(
-        email: email,
-        password: password,
-        fcmToken: fcmToken,
-      );
-    }
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+
+    final fcmToken = await _firebaseService.getToken() ?? '';
+
+
+    print('$fcmToken');
+    BlocProvider.of<LoginCubit>(context).login(
+      email: email,
+      password: password,
+      fcmToken: fcmToken,
+    );
   }
 
   @override
@@ -84,7 +92,6 @@ class _LoginPageState extends State<LoginPage> {
             builder: (context, state) {
               return Stack(
                 children: [
-
                   ListView(
                     padding: EdgeInsets.symmetric(
                       horizontal: 24.w,
@@ -131,7 +138,6 @@ class _LoginPageState extends State<LoginPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-
                             BlocBuilder<LoginCubit, LoginState>(
                               builder: (context, currentState) {
                                 return CustomButton(
@@ -198,7 +204,6 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(height: 100.h),
                     ],
                   ),
-
                   if (state is LoginLoading)
                     const LoadingOverlay(
                       message: 'جارٍ تسجيل الدخول...',

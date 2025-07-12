@@ -127,6 +127,7 @@ class _HomePageState extends State<HomePage> {
         _buildCircleIconButton(
           icon: FontAwesomeIcons.solidBell,
           onTap: () {
+
             context.push(AppRoutesNames.notifications);
           },
         ),

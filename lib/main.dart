@@ -9,10 +9,12 @@ import 'core/utils/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // initialize all of our services (Firebase, notifications, etc.)
   await configureDependencies();
-  await FlutterDownloader.initialize(
-    debug: true,
-  );
+
+  // your existing downloader init
+  await FlutterDownloader.initialize(debug: true);
 
   runApp(const MyApp());
 }

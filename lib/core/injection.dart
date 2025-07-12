@@ -46,6 +46,9 @@ import '../features/my_course_details/data/datasources/section_files_remote_data
 import '../features/my_course_details/data/repositories/my_courses_repository.dart';
 import '../features/my_course_details/data/repositories/quiz_repository.dart';
 import '../features/my_course_details/data/repositories/section_files_repository.dart';
+import '../features/notifications/cubit/notifications_cubit.dart';
+import '../features/notifications/data/datasources/notifications_remote_data_source.dart';
+import '../features/notifications/data/repositories/notifications_repository.dart';
 import '../features/profile/cubit/profile_cubit.dart';
 import '../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../features/profile/data/repositories/profile_repository.dart';
@@ -69,6 +72,8 @@ import 'network/dio_client.dart';
 import '../features/counter/data/datasources/counter_remote_ds.dart';
 import '../features/counter/data/repository/counter_repo.dart';
 import '../features/counter/cubit/counter_cubit.dart';
+import 'network/firebase_service.dart';
+import 'network/notification_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -318,6 +323,23 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<RatingsCubit>(
         () => RatingsCubit(getIt<RatingsRepository>()),
+  );
+  ///////////////////////
+  getIt.registerSingleton<FirebaseService>(FirebaseService());
+  getIt.registerSingleton<NotificationService>(NotificationService());
+
+  // Initialize Firebase first, then Notifications
+  await getIt<FirebaseService>().init();
+  await getIt<NotificationService>().init();
+  /////////////////////////////////
+  getIt.registerLazySingleton<NotificationsRemoteDataSource>(
+        () => NotificationsRemoteDataSourceImpl(getIt<Dio>()),
+  );
+  getIt.registerLazySingleton<NotificationsRepository>(
+        () => NotificationsRepositoryImpl(getIt<NotificationsRemoteDataSource>()),
+  );
+  getIt.registerFactory<NotificationsCubit>(
+        () => NotificationsCubit(getIt<NotificationsRepository>()),
   );
 }
 

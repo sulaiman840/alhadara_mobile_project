@@ -1,194 +1,139 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
-import 'package:go_router/go_router.dart';
-import '../../../../core/navigation/routes_names.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart' show DateFormat;
+import '../../../../core/utils/app_colors.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../cubit/notifications_cubit.dart';
+import '../../cubit/notifications_state.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({Key? key}) : super(key: key);
 
-  static final List<Map<String, dynamic>> _todayNotifications = [
-    {
-      'type': 'comment',
-      'title': 'مريم علي علّقت على منتدى فلاتر',
-      'content': 'كورس مفيد ينصح بها.',
-      'avatar': 'assets/images/girl.png',
-      'time': '09:45',
-    },
-    {
-      'type': 'course',
-      'label': 'كورس جديد',
-      'subtitle': 'كورس فلاتر للمبتدئين',
-      'thumbnail': 'assets/images/Flutter.png',
-      'authorAvatar': 'assets/images/man.png',
-      'authorName': 'احمد علي',
-      'time': '08:58',
-    },
-  ];
+  String _formatTime(DateTime dt) => DateFormat('HH:mm').format(dt);
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<NotificationsCubit>();
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppColor.background,
-        appBar: CustomAppBar(
-          title: 'الإشعارات',
-          onBack: () => context.go(AppRoutesNames.home),
-        ),
+        appBar: CustomAppBar(title: 'الإشعارات'),
         body: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Section header
-              Text(
-                'اليوم',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  color: AppColor.textDarkBlue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 15.h),
-
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _todayNotifications.length,
-                  separatorBuilder: (_, __) => Divider(
-                    color: AppColor.gray3,
-                    thickness: 0.2.h,
-                    height: 16.h,
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          child: BlocBuilder<NotificationsCubit, NotificationsState>(
+            builder: (context, state) {
+              if (state is NotificationsLoading) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: AppColor.purple,
                   ),
-                  itemBuilder: (ctx, idx) {
-                    final n = _todayNotifications[idx];
-                    if (n['type'] == 'comment') {
-                      // ——————— comment style ———————
-                      return Row(
-                        children: [
-                          // avatar on the right
-                          CircleAvatar(
-                            radius: 20.r,
-                            backgroundImage: AssetImage(n['avatar']),
+                );
+              }
+
+              if (state is NotificationsError) {
+                return Center(
+                  child: Text(state.message, style: TextStyle(color: AppColor.red)),
+                );
+              }
+
+              if (state is NotificationsLoaded) {
+                final notes = state.notifications;
+                if (notes.isEmpty) {
+                  return const Center(child: Text('لا توجد إشعارات'));
+                }
+
+                return RefreshIndicator(
+                  color: AppColor.purple,
+                  onRefresh: cubit.fetchNotifications,
+                  child: ListView.separated(
+                    separatorBuilder: (_, __) => Divider(
+                      color: AppColor.gray2,
+                      thickness: 0.5.h,
+                    ),
+                    itemCount: notes.length,
+                    itemBuilder: (ctx, idx) {
+                      final n = notes[idx];
+                      final isUnread = !n.isRead;
+
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6.h),
+                        child: Card(
+                          color: isUnread ? AppColor.white : AppColor.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
-                          SizedBox(width: 12.w),
-                          // title + content
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  n['title'],
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColor.textDarkBlue,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  n['content'],
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    color: AppColor.gray3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          // time on the left
-                          Text(
-                            n['time'],
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppColor.gray3,
-                            ),
-                          ),
-                        ],
-                      );
-                    } else {
-                      // ——————— course style ———————
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: AppColor.background,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        padding: EdgeInsets.all(4.w),
-                        child: Row(
-                          children: [
-                            // thumbnail (rightmost)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8.r),
-                              child: Image.asset(
-                                n['thumbnail'],
-                                width: 80.w,
-                                height: 60.h,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            // text column
-                            Expanded(
-                              child: Column(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8.r),
+                            onTap: () {
+                              // TODO: mark as read / navigate
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(12.w),
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    n['label'],
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.bold,
+                                  Container(
+                                    width: 40.w,
+                                    height: 40.w,
+                                    decoration: BoxDecoration(
+                                      color: AppColor.purple2.withOpacity(0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.notifications,
                                       color: AppColor.purple,
+                                      size: 24.r,
                                     ),
                                   ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    n['subtitle'],
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.textDarkBlue,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 12.r,
-                                        backgroundImage:
-                                        AssetImage(n['authorAvatar']),
-                                      ),
-                                      SizedBox(width: 8.w),
-                                      Text(
-                                        n['authorName'],
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          color: AppColor.gray3,
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          n.title,
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColor.textDarkBlue,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          n.body,
+                                          style: TextStyle(
+                                            fontSize: 12.sp,
+                                            color: AppColor.textDarkBlue,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8.h),
+                                        Text(
+                                          _formatTime(n.createdAt),
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            color:AppColor.textDarkBlue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                            SizedBox(width: 12.w),
-                            // time on the left
-                            Text(
-                              n['time'],
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: AppColor.gray3,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       );
-                    }
-                  },
-                ),
-              ),
-            ],
+                    },
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
           ),
         ),
       ),
