@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 
 
 class FinishedCoursesPage extends StatefulWidget {

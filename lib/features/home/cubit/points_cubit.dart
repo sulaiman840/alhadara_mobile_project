@@ -18,7 +18,6 @@ class PointsCubit extends Cubit<PointsState> {
       final model = await _repository.fetchPoints();
       emit(PointsSuccess(model.points));
     } on DioException catch (e) {
-      // you can special-case 401 here if you want to redirect to login
       final msg = (e.response?.data is Map &&
           (e.response!.data as Map).containsKey('message'))
           ? (e.response!.data['message'] as String)

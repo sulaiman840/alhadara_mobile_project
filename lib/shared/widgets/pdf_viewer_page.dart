@@ -28,9 +28,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
     try {
       final resp = await http.get(Uri.parse(widget.url));
       if (resp.statusCode != 200) throw Exception('HTTP ${resp.statusCode}');
-      _pdfBytes = resp.bodyBytes;  // already Uint8List
+      _pdfBytes = resp.bodyBytes;
 
-      // now this matches the PdfDocument API:
       _pdfController = PdfControllerPinch(
         document: PdfDocument.openData(_pdfBytes),
       );

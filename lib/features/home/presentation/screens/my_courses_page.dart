@@ -1,5 +1,3 @@
-// lib/features/my_course_details/presentation/screens/my_courses_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,9 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
-import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 
 import '../../../my_course_details/cubit/my_courses_cubit.dart';
 import '../../../my_course_details/cubit/my_courses_state.dart';
@@ -18,7 +15,7 @@ import '../../../saved courses/cubit/saved_courses_state.dart';
 
 
 class MyCoursesPage extends StatefulWidget {
-  const MyCoursesPage({Key? key}) : super(key: key);
+  const MyCoursesPage({super.key});
 
   @override
   _MyCoursesPageState createState() => _MyCoursesPageState();
@@ -28,7 +25,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
   @override
   void initState() {
     super.initState();
-    // trigger both loads
     context.read<MyCoursesCubit>().fetchMyCourses();
     context.read<SavedCoursesCubit>().fetchSaved();
   }
@@ -45,7 +41,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w),
-            // 1️⃣ Outer: watch saved‐courses state
             child: BlocBuilder<SavedCoursesCubit, SavedCoursesState>(
               builder: (ctxSave, saveState) {
                 if (saveState is SavedCoursesLoading) {
@@ -59,7 +54,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     .map((c) => c.id)
                     .toSet();
 
-                // 2️⃣ Inner: watch my‐courses state
                 return BlocBuilder<MyCoursesCubit, MyCoursesState>(
                   builder: (ctxMy, myState) {
                     if (myState is MyCoursesLoading ||
@@ -153,7 +147,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                         style: TextStyle(
                                           fontSize: 14.sp,
                                           color: AppColor.textDarkBlue
-                                              .withOpacity(0.7),
+                                              .withValues(alpha: 0.7),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -181,7 +175,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                 ),
                                 SizedBox(width: 12.w),
 
-                                // ── only this bookmark toggles saved/unsaved
                                 GestureDetector(
                                   onTap: () {
                                     ctxSave

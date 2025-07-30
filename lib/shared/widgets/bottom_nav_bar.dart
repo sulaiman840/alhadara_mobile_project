@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 
 class MyBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -15,7 +14,6 @@ class MyBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final icons = [
       FontAwesomeIcons.house,
       FontAwesomeIcons.calendarCheck,
@@ -24,10 +22,12 @@ class MyBottomNavBar extends StatelessWidget {
       FontAwesomeIcons.gear,
     ];
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
-        color: AppColor.background,
+        color: scheme.surface,
         padding: EdgeInsets.symmetric(vertical: 4.h),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -45,7 +45,7 @@ class MyBottomNavBar extends StatelessWidget {
                   height: selected ? 56.w : 48.w,
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppColor.purple.withValues(alpha: 0.15)
+                        ? scheme.primary.withValues(alpha: 0.15)
                         : Colors.transparent,
                     shape: BoxShape.circle,
                   ),
@@ -53,7 +53,9 @@ class MyBottomNavBar extends StatelessWidget {
                     child: Icon(
                       icons[i],
                       size: selected ? 28.r : 24.r,
-                      color: selected ? AppColor.purple : AppColor.gray3,
+                      color: selected
+                          ? scheme.primary
+                          : scheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ),

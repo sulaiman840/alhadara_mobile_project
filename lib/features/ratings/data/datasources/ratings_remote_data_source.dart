@@ -39,10 +39,8 @@ class RatingsRemoteDataSourceImpl implements RatingsRemoteDataSource {
         if (comment != null) 'comment': comment,
       },
           (json) {
-        // 1) safely cast to a map
         final raw = json as Map<String, dynamic>;
 
-        // 2) if your backend wraps things in "data", unwrap it; otherwise use raw
         final payload = raw['data'] is Map<String, dynamic>
             ? raw['data'] as Map<String, dynamic>
             : raw;

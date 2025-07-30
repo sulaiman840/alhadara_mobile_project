@@ -25,7 +25,6 @@ class RatingsCubit extends Cubit<RatingsState> {
       comment: comment,
     );
     res.fold((err) => emit(RatingsFailure(err)), (m) => emit(RatingsSubmitSuccess(m)));
-    // re-load list after submit
     await loadSectionRatings(sectionId);
   }
 }

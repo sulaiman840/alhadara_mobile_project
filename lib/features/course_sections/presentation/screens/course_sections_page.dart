@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../core/utils/app_colors.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../../home/data/models/course_model.dart';
 import '../../data/models/section_model.dart';
 import '../../cubit/sections_cubit.dart';

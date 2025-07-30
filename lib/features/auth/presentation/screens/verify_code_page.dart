@@ -1,5 +1,3 @@
-/// lib/features/auth/presentation/screens/verify_code_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -9,9 +7,9 @@ import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
 import '../../cubit/verify_cubit.dart';
 import '../../cubit/verify_state.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
-import '../../../../shared/widgets/loading_overlay.dart'; // if you use overlay
+import '../../../../shared/widgets/loading_overlay.dart';
 
 class VerifyCodePage extends StatefulWidget {
   const VerifyCodePage({Key? key}) : super(key: key);
@@ -52,7 +50,6 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
   }
 
   void _onResend() {
-    // TODO: your backend “resend code” logic
   }
 
   @override
@@ -60,13 +57,11 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
     return BlocConsumer<VerifyCubit, VerifyState>(
       listener: (context, state) {
         if (state is VerifySuccess) {
-          // Translate backend’s English to Arabic if necessary:
           final msgLower = state.message.trim().toLowerCase();
           String displayMsg;
           if (msgLower == 'your account has been verified') {
             displayMsg = 'تم التحقق من حسابك بنجاح';
           } else {
-            // fallback to whatever the server actually sent
             displayMsg = state.message;
           }
 
@@ -199,7 +194,6 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
                     ],
                   ),
 
-                  // Full-screen loading overlay:
                   if (state is VerifyLoading)
                     const LoadingOverlay(
                       message: 'جارٍ التحقق من الرمز...',

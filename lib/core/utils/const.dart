@@ -1,5 +1,5 @@
 class ConstString{
 
-  static const String baseURl = 'http://192.168.215.198:8000/';
+  static const String baseURl = 'http://10.104.154.199:8000/';
 
 }

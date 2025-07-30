@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:alhadara_mobile_project/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:alhadara_mobile_project/features/auth/data/models/login_response_model.dart';
 import 'package:alhadara_mobile_project/features/auth/data/models/verification_response_model.dart';
@@ -27,8 +26,7 @@ class AuthRepository {
   Future<VerificationResponseModel> verifyEmail({ required int token }) {
     return remoteDataSource.verifyEmail(token: token);
   }
-  // ────────────────────────────────────────────────────────────────────────────
-  // Expose forgotPassword & resetPassword
+
   Future<String> forgotPassword({
     required String email,
   }) {

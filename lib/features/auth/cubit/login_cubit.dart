@@ -24,21 +24,21 @@ class LoginCubit extends Cubit<LoginState> {
         fcmToken: fcmToken,
       );
       final accessToken = response.accessToken.accessToken;
-      final user        = response.accessToken.user; // UserModel
+      final user        = response.accessToken.user;
       final prefs       = await SharedPreferences.getInstance();
 
-// 1) Save token & ID
+
       await prefs.setString('access_token', accessToken);
       await prefs.setInt('user_id', user.id);
 
-// 2) Save name & createdAt (unchanged)
+
       await prefs.setString('user_name', user.name);
       await prefs.setString('user_created_at', user.createdAt);
 
-// 3) Build the full HTTP URL for the photo, then save it
+
       String photoUrl = '';
       if (user.photo != null && user.photo!.isNotEmpty) {
-        // PREPEND your server’s base URL here:
+
         photoUrl = '${ConstString.baseURl}${user.photo}';
       }
       await prefs.setString('user_photo', photoUrl);

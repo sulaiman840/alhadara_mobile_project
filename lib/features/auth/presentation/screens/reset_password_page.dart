@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/screens/reset_password_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../../../shared/widgets/TextFormField/custom_password_field.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
@@ -25,7 +24,6 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Five controllers & focus nodes for the 5‐digit verification code
   final List<TextEditingController> _codeControllers =
   List.generate(5, (_) => TextEditingController());
   final List<FocusNode> _codeFocusNodes = List.generate(5, (_) => FocusNode());
@@ -89,7 +87,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     return BlocConsumer<ResetPasswordCubit, ResetPasswordState>(
       listener: (context, state) {
         if (state is ResetPasswordLoading) {
-          // optionally show a loading overlay (handled below)
         }
         if (state is ResetPasswordSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -136,7 +133,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               children: [
                                 SizedBox(height: 30.h),
 
-                                // ─────────────────────── Verification Code Input ───────────────────────
                                 Text(
                                   'أدخل الرمز المكون من 5 أرقام الذي أرسلناه إلى بريدك الإلكتروني',
                                   textAlign: TextAlign.center,
@@ -196,7 +192,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                 ),
                                 SizedBox(height: 30.h),
 
-                                // ─────────────────────── New Password Fields ───────────────────────
                                 Text(
                                   'قم بإنشاء كلمة مرور جديدة لتسجيل الدخول',
                                   textAlign: TextAlign.center,
@@ -239,7 +234,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                   ),
 
-                  // Full‐screen “loading” overlay while reset is in progress
                   if (state is ResetPasswordLoading)
                     const LoadingOverlay(
                         message: 'جارٍ إعادة تعيين كلمة المرور...'),

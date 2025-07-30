@@ -17,11 +17,9 @@ class RatingModel {
     required this.student,
   });
   factory RatingModel.fromJson(Map<String,dynamic> json) {
-    // some APIs might omit the full "student" payload when you just create a rating
     final studentJson = json['student'];
     final student = (studentJson is Map<String, dynamic>)
         ? StudentModel.fromJson(studentJson)
-    // fallback: we at least know the student_id, even if we don't have the name/photo
         : StudentModel(
       id: json['student_id'] as int,
       name: 'Unknown',

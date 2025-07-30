@@ -1,4 +1,3 @@
-// lib/features/home/data/models/recommended_course_model.dart
 
 class RecommendedCourse {
   final int id;
@@ -41,7 +40,6 @@ class RecommendedCourse {
   };
 }
 
-/// A simple wrapper since the API returns { message, recommended_courses: [...] }
 class RecommendedCoursesResponse {
   final List<RecommendedCourse> courses;
 

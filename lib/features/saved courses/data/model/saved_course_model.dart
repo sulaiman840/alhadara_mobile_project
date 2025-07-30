@@ -1,5 +1,3 @@
-// wherever you defined SavedCourse:
-
 class SavedCourse {
   final int id;
   final String name;
@@ -31,7 +29,7 @@ class SavedCourse {
     );
   }
 
-  /// ← Add this:
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,

@@ -6,7 +6,6 @@ class AppRoutesNames {
   static const String forgotPassword  = '/forgotPassword';
   static const String verifyCodePage   = '/verifyCodePage';
   static const resetPassword = '/reset-password';
-  static const initialSurvey  = '/initial-survey';
   static const home  = '/home';
   static const String categories = '/categories';
   static const String myCourses = '/myCourses';
@@ -33,7 +32,6 @@ class AppRoutesNames {
   static const trainersDetails = '/trainersDetails';
   static const String pendingSections = '/pendingSections';
   static const String activeAds = '/ads';
-  static const testDetails = '/testDetails';
-  static const myTestDetails = '/myTestDetails';
+
 
 }

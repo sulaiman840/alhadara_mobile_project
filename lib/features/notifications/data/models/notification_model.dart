@@ -1,4 +1,3 @@
-// lib/features/notifications/data/models/notification_model.dart
 
 class NotificationModel {
   final int id;

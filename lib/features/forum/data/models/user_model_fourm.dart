@@ -28,13 +28,11 @@ class UserModelFourm extends Equatable {
   });
 
   factory UserModelFourm.fromJson(Map<String, dynamic> json) {
-    // parse dates safely
     DateTime parseDate(String? raw) {
       if (raw == null) return DateTime.now();
       try {
         return DateTime.parse(raw);
       } catch (_) {
-        // try custom format e.g. yyyy/MM/dd
         final parts = raw.split('/');
         if (parts.length == 3) {
           return DateTime(

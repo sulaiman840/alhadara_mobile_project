@@ -1,4 +1,3 @@
-// lib/features/notifications/cubit/notifications_state.dart
 
 import 'package:equatable/equatable.dart';
 import '../data/models/notification_model.dart';

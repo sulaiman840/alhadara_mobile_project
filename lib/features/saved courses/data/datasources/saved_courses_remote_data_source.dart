@@ -1,4 +1,3 @@
-// lib/features/saved_courses/data/datasources/saved_courses_remote_data_source.dart
 
 import 'package:dio/dio.dart';
 import '../model/saved_course_model.dart';
@@ -21,14 +20,12 @@ class SavedCoursesRemoteDataSourceImpl implements SavedCoursesRemoteDataSource {
       queryParameters: {'per_page': perPage},
     );
     if (resp.statusCode == 429) {
-      // Throw a DioException so the Cubit can catch it
       throw DioException(
         requestOptions: resp.requestOptions,
         response: resp,
         type: DioExceptionType.badResponse,
       );
     }
-    // you can also guard resp.statusCode != 200 here similarly...
     final raw = (resp.data['saved_courses']['data'] as List);
     return raw
         .map((j) => SavedCourse.fromJson(j as Map<String, dynamic>))

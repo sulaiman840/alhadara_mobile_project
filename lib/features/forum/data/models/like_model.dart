@@ -3,7 +3,7 @@ import 'user_model_fourm.dart';
 
 class LikeModel extends Equatable {
   final int id;
-  final UserModelFourm? user; // might be null
+  final UserModelFourm? user;
 
   const LikeModel({required this.id, this.user});
 

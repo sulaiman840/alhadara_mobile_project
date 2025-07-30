@@ -1,5 +1,3 @@
-// lib/features/forum/presentation/screens/forum_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/const.dart';
 import '../../../../core/navigation/routes_names.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../cubit/forum_cubit.dart';
 import '../../cubit/forum_state.dart';
 
@@ -27,9 +25,9 @@ class ForumPage extends StatelessWidget {
     final contentCtl = TextEditingController();
     showDialog(
       context: ctx,
-      builder: (_) => AlertDialog(        backgroundColor: AppColor.textDarkBlue,
-
-        title: const Text('إنشاء سؤال جديد'),
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColor.gray2,
+        title: const Text('إنشاء سؤال جديد',),
         content: TextField(
           controller: contentCtl,
           decoration: const InputDecoration(labelText: 'محتوى السؤال'),
@@ -37,15 +35,19 @@ class ForumPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء',
-            style: TextStyle(color: AppColor.white),)),
-          ElevatedButton(  style: ElevatedButton.styleFrom(
-            backgroundColor: AppColor.purple,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24.r),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(color: AppColor.white),
+              )),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColor.purple,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
-            padding: EdgeInsets.symmetric(vertical: 12.h),
-          ),
             onPressed: () {
               final txt = contentCtl.text.trim();
               if (txt.isNotEmpty) {
@@ -53,8 +55,10 @@ class ForumPage extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
-            child: const Text('نشر',
-              style: TextStyle(color: AppColor.white),),
+            child: const Text(
+              'نشر',
+              style: TextStyle(color: AppColor.white),
+            ),
           ),
         ],
       ),
@@ -150,7 +154,6 @@ class ForumPage extends StatelessWidget {
             backgroundColor: AppColor.background,
             appBar: CustomAppBar(
               title: 'المنتدى',
-
             ),
             floatingActionButton: FloatingActionButton(
               backgroundColor: AppColor.purple2,
@@ -167,7 +170,10 @@ class ForumPage extends StatelessWidget {
                 final qs = (state as ForumLoaded).questions;
                 if (qs.isEmpty)
                   return const Center(
-                      child: Text('لا يوجد أسئلة في هذا القسم',style: TextStyle(color: AppColor.textDarkBlue),));
+                      child: Text(
+                    'لا يوجد أسئلة في هذا القسم',
+                    style: TextStyle(color: AppColor.textDarkBlue),
+                  ));
 
                 return ListView.separated(
                   padding:
@@ -222,17 +228,19 @@ class ForumPage extends StatelessWidget {
                                         style: TextStyle(color: Colors.white)),
                                     SizedBox(width: 24.w),
                                     IconButton(
-                                      icon: const Icon(Icons.comment, color: Colors.white),
+                                      icon: const Icon(Icons.comment,
+                                          color: Colors.white),
                                       onPressed: () {
                                         context.pushNamed(
-                                                  'forumDetail',
-                                                   pathParameters: {
-                                                 'sectionId': sectionId.toString(),
-                                                 'questionId': q.id.toString(),
-                                               },
-                                                );
+                                          'forumDetail',
+                                          pathParameters: {
+                                            'sectionId': sectionId.toString(),
+                                            'questionId': q.id.toString(),
+                                          },
+                                        );
                                       },
-                                    ),                                  ],
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

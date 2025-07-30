@@ -1,4 +1,3 @@
-// lib/features/forum/data/repositories/forum_repository.dart
 
 import 'package:dartz/dartz.dart';
 import '../../../../core/network/statusrequest.dart';
@@ -9,7 +8,6 @@ import '../models/answer_model.dart';
 abstract class ForumRepository {
   Future<Either<StatusRequest, List<QuestionModel>>> fetchQuestions(int sectionId);
 
-  // Changed to return Unit
   Future<Either<StatusRequest, Unit>> postQuestion(int sectionId, String content);
   Future<Either<StatusRequest, Unit>> updateQuestion(int questionId, String content);
   Future<Either<StatusRequest, Unit>> deleteQuestion(int questionId);

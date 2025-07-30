@@ -1,4 +1,3 @@
-// lib/features/home/cubit/courses_cubit.dart
 
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
@@ -9,12 +8,10 @@ import 'courses_state.dart';
 class CoursesCubit extends Cubit<CoursesState> {
   final CoursesRepository _repository;
 
-  /// Holds the last‐fetched list of courses in the current department.
   List<CourseModel> _allCourses = [];
 
   CoursesCubit(this._repository) : super(CoursesInitial());
 
-  /// Fetch all courses in [departmentId], then cache them in `_allCourses`.
   Future<void> fetchCourses(int departmentId) async {
     if (state is CoursesLoading) return;
     emit(CoursesLoading());
@@ -38,7 +35,6 @@ class CoursesCubit extends Cubit<CoursesState> {
     }
   }
 
-  /// New helper: look up a course by its ID from the cached `_allCourses`.
   CourseModel? findById(int id) {
     try {
       return _allCourses.firstWhere((c) => c.id == id);

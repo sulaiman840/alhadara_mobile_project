@@ -1,5 +1,3 @@
-// lib/features/saved_courses/cubit/saved_courses_cubit.dart
-
 import 'package:bloc/bloc.dart';
 import 'package:collection/collection.dart';
 import '../../home/data/models/course_model.dart';
@@ -13,7 +11,6 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
   final SavedCoursesRepository _savedRepo;
   final MyCoursesRepository _myCoursesRepo;
 
-  // cache last-loaded
   List<SavedCourse> _cachedCourses = [];
   int _cachedCount = 0;
 
@@ -25,12 +22,11 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
       emit(SavedCoursesLoading());
       final courses = await _savedRepo.getSavedCourses(10);
       final count = await _savedRepo.getSavedCount();
-      // update cache
       _cachedCourses = courses;
       _cachedCount = count;
       emit(SavedCoursesLoaded(courses, count));
     } catch (_) {
-      emit(const SavedCoursesError('فشل في جلب الكورسات المحفوظة'));
+      emit(const SavedCoursesError('saved_courses_error'));
     }
   }
 
@@ -43,12 +39,10 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
       }
       await fetchSaved();
     } catch (_) {
-      // ignore or emit error
     }
   }
 
   Future<void> selectCourse(SavedCourse c) async {
-    // 1) fetch enrolled
     List<EnrolledCourseModel> enrolled;
     try {
       enrolled = await _myCoursesRepo.fetchMyCourses();
@@ -57,7 +51,6 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
     }
     final match = enrolled.firstWhereOrNull((e) => e.course.id == c.id);
 
-    // 2) map to CourseModel
     final courseModel = CourseModel(
       id: c.id,
       name: c.name,
@@ -68,14 +61,12 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
       updatedAt: c.updatedAt,
     );
 
-    // 3) emit Navigate
     emit(SavedCoursesNavigate(
       isEnrolled: match != null,
       courseModel: courseModel,
       enrolledModel: match,
     ));
 
-    // 4) immediately restore to Loaded so that next tap will again go Loaded→Navigate
     emit(SavedCoursesLoaded(_cachedCourses, _cachedCount));
   }
 }

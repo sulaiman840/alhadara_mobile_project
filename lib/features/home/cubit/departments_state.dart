@@ -1,4 +1,3 @@
-// lib/features/home/cubit/departments_state.dart
 
 import 'package:equatable/equatable.dart';
 import '../data/models/department_model.dart';

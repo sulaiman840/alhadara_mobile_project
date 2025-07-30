@@ -3,12 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../../core/utils/app_colors.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../cubit/notifications_cubit.dart';
 import '../../cubit/notifications_state.dart';
 
 class NotificationsPage extends StatelessWidget {
-  const NotificationsPage({Key? key}) : super(key: key);
+  const NotificationsPage({super.key});
 
   String _formatTime(DateTime dt) => DateFormat('HH:mm').format(dt);
 
@@ -69,7 +69,7 @@ class NotificationsPage extends StatelessWidget {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(8.r),
                             onTap: () {
-                              // TODO: mark as read / navigate
+
                             },
                             child: Padding(
                               padding: EdgeInsets.all(12.w),
@@ -80,7 +80,7 @@ class NotificationsPage extends StatelessWidget {
                                     width: 40.w,
                                     height: 40.w,
                                     decoration: BoxDecoration(
-                                      color: AppColor.purple2.withOpacity(0.6),
+                                      color: AppColor.purple2.withValues(alpha: 0.6),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(

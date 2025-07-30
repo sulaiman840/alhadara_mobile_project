@@ -3,11 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/utils/app_colors.dart';
 
 class LoadingOverlay extends StatelessWidget {
-  final String message;
+  final String? message;
 
   const LoadingOverlay({
     Key? key,
-    this.message = 'جارٍ تحميل...',
+   this.message,
   }) : super(key: key);
 
   @override
@@ -51,12 +51,18 @@ class LoadingOverlay extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
                 Text(
-                  message,
+                  message ?? 'جارٍ تحميل...',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                     color: AppColor.textDarkBlue,
+                    decoration: TextDecoration.none,
+                    height: 1.3,
+                  ),
+                  textHeightBehavior: TextHeightBehavior(
+                    applyHeightToFirstAscent: true,
+                    applyHeightToLastDescent: true,
                   ),
                 ),
               ],

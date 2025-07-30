@@ -1,4 +1,3 @@
-// lib/features/auth/presentation/screens/forgot_password_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,7 +8,7 @@ import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
 import '../../../../shared/widgets/TextFormField/custom_text_form_field.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 
 import '../../cubit/forgot_password_cubit.dart';
 import '../../cubit/forgot_password_state.dart';

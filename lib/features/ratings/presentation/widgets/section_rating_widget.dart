@@ -1,4 +1,3 @@
-// lib/features/ratings/presentation/widgets/section_rating_widget.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,7 +37,6 @@ class SectionRatingWidget extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── header row: average + edit button ───────────────────
               Row(
                 children: [
                   TextButton.icon(
@@ -78,7 +76,6 @@ class SectionRatingWidget extends StatelessWidget {
     );
   }
 
-  /// Dialog to enter or edit your own rating+comment
   void _showRatingDialog(BuildContext context, double avgRating) {
     final initial = avgRating.round().clamp(1, 5);
     final _rating = ValueNotifier<int>(initial);
@@ -95,7 +92,6 @@ class SectionRatingWidget extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Stars picker
             ValueListenableBuilder<int>(
               valueListenable: _rating,
               builder: (_, val, __) => Row(
@@ -112,14 +108,13 @@ class SectionRatingWidget extends StatelessWidget {
               ),
             ),
 
-            // Your comment field with autofocus & custom text color
             TextField(
               controller: _comment,
               autofocus: true,
               cursorColor: AppColor.purple,
               style: TextStyle(
-                color: AppColor.purple,     // the typed text color
-                fontSize: 14.sp,            // keep in sync with ScreenUtil
+                color: AppColor.purple,
+                fontSize: 14.sp,
               ),
               decoration: InputDecoration(
                 hintText: 'أضف تعليقاً',
@@ -162,7 +157,6 @@ class SectionRatingWidget extends StatelessWidget {
     );
   }
 
-  /// Dialog that shows all comments in a scrollable list
   void _showCommentsSheet(BuildContext context, List<RatingModel> comments) {
     showModalBottomSheet(
       context: context,
@@ -180,7 +174,6 @@ class SectionRatingWidget extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           child: Column(
             children: [
-              // ── drag handle ────────────────────────────
               Container(
                 width: 40.w,
                 height: 4.h,
@@ -191,7 +184,6 @@ class SectionRatingWidget extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
 
-              // ── header ───────────────────────────────────
               Row(
                 children: [
                   IconButton(
@@ -212,10 +204,8 @@ class SectionRatingWidget extends StatelessWidget {
               ),
               SizedBox(height: 8.h),
 
-              // ── separator ───────────────────────────────
               Divider(color: AppColor.gray3.withValues(alpha: 0.3)),
 
-              // ── list ─────────────────────────────────────
               Expanded(
                 child: ListView.separated(
                   controller: scrollCtrl,
@@ -234,7 +224,6 @@ class SectionRatingWidget extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // avatar (if you have photos; fallback to initials)
                             CircleAvatar(
                               radius: 20.r,
                               backgroundColor:

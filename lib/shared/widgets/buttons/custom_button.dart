@@ -9,12 +9,12 @@ class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
   const CustomButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.horizontalPadding = 24.0,
     this.height = 48.0,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

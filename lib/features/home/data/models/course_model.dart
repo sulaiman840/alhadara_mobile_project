@@ -1,4 +1,3 @@
-// lib/features/home/data/models/course_model.dart
 
 import 'package:equatable/equatable.dart';
 
@@ -21,7 +20,6 @@ class CourseModel extends Equatable {
     required this.updatedAt,
   });
 
-  /// Converts this CourseModel into a JSON‐serializable map.
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -32,7 +30,6 @@ class CourseModel extends Equatable {
     'updated_at': updatedAt.toIso8601String(),
   };
 
-  /// Reconstructs a CourseModel from a map (e.g. from JSON or GoRouter extra).
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
       id: json['id'] as int,

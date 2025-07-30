@@ -1,4 +1,3 @@
-// lib/features/course_sections/presentation/screens/courses_list_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../../saved courses/cubit/saved_courses_cubit.dart';
 import '../../../saved courses/cubit/saved_courses_state.dart';
 import '../../cubit/courses_cubit.dart';
@@ -18,10 +17,10 @@ class CoursesListPage extends StatefulWidget {
   final String departmentName;
 
   const CoursesListPage({
-    Key? key,
+    super.key,
     required this.departmentId,
     required this.departmentName,
-  }) : super(key: key);
+  });
 
   @override
   _CoursesListPageState createState() => _CoursesListPageState();
@@ -30,7 +29,6 @@ class CoursesListPage extends StatefulWidget {
 class _CoursesListPageState extends State<CoursesListPage> {
   @override
   Widget build(BuildContext context) {
-    // 1️⃣ build UI that depends on both SavedCoursesCubit and CoursesCubit
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -49,7 +47,6 @@ class _CoursesListPageState extends State<CoursesListPage> {
                 return Center(child: Text(savedState.message));
               }
 
-              // we now have the set of saved course IDs
               final savedIds = <int>{
                 for (final c in (savedState as SavedCoursesLoaded).courses) c.id
               };
@@ -90,7 +87,6 @@ class _CoursesListPageState extends State<CoursesListPage> {
                       final isSaved = savedIds.contains(c.id);
 
                       return InkWell(
-                        // row tap → course details
                         onTap: () {
                           context.push(
                             AppRoutesNames.courseDetails,
@@ -105,7 +101,6 @@ class _CoursesListPageState extends State<CoursesListPage> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // ── Thumbnail ────────────────────────
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12.r),
                                 child: Image.network(
@@ -144,7 +139,6 @@ class _CoursesListPageState extends State<CoursesListPage> {
                               ),
                               SizedBox(width: 12.w),
 
-                              // ── Course info ──────────────────────
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,9 +169,7 @@ class _CoursesListPageState extends State<CoursesListPage> {
                               ),
                               SizedBox(width: 12.w),
 
-                              // ── Bookmark icon ────────────────────
                               GestureDetector(
-                                // only this icon toggles saved state
                                 onTap: () {
                                   ctxSaved
                                       .read<SavedCoursesCubit>()

@@ -3,8 +3,7 @@ import 'package:dio/dio.dart';
 import '../models/department_model.dart';
 
 abstract class DepartmentsRemoteDataSource {
-  /// Fetches all departments for the authenticated student.
-  /// Returns a `List<DepartmentModel>`.
+
   Future<List<DepartmentModel>> getDepartments();
 }
 

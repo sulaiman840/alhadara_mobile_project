@@ -10,7 +10,6 @@ class DepartmentsCubit extends Cubit<DepartmentsState> {
 
   DepartmentsCubit(this._repository) : super(DepartmentsInitial());
 
-  /// Fetch all departments and emit appropriate states.
   Future<void> fetchDepartments() async {
     if (state is DepartmentsLoading) return;
     emit(DepartmentsLoading());

@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/navigation/routes_names.dart';
 import '../../../../core/utils/const.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../../profile/cubit/profile_cubit.dart';
 import '../../../profile/cubit/profile_state.dart';
 import '../Widget/info_card_widget.dart';

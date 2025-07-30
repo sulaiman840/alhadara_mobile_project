@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../models/course_model.dart';
 
 abstract class CoursesRemoteDataSource {
-  /// Fetches all courses in a given department.
   Future<List<CourseModel>> getCoursesByDepartment(int departmentId);
 }
 

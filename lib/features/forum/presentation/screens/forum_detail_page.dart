@@ -1,4 +1,3 @@
-// lib/features/forum/presentation/screens/forum_detail_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/const.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
 import '../../cubit/forum_cubit.dart';
 import '../../cubit/forum_state.dart';
 
@@ -46,7 +45,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColor.textDarkBlue,
+        backgroundColor: AppColor.gray2,
         title: const Text('تعديل الإجابة', style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: ctl,
@@ -82,7 +81,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColor.textDarkBlue,
+        backgroundColor: AppColor.gray2,
         title: const Text('حذف الإجابة؟'),
         content: const Text('هل أنت متأكد أنك تريد حذف هذه الإجابة؟'),
         actions: [
@@ -185,7 +184,7 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
                     ),
                     SizedBox(height: 24.h),
 
-                    // Answers list
+
                     ...question.answers.map((a) {
                       final isMine = a.user.id == meId;
                       return Padding(
@@ -260,7 +259,6 @@ class _ForumDetailPageState extends State<ForumDetailPage> {
           },
         ),
 
-        // bottomSheet lifts above the keyboard automatically
         bottomSheet: SafeArea(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
