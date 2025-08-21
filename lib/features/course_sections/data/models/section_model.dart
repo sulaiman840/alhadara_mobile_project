@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-/// Represents one day/time slot in a section.
 class WeekDayModel {
   final int id;
   final String name;
@@ -25,7 +24,7 @@ class WeekDayModel {
   }
 }
 
-/// Represents a trainer assigned to a section.
+
 class TrainerModel {
   final int id;
   final String name;
@@ -76,7 +75,7 @@ class TrainerModel {
   }
 }
 
-/// The section itself.
+
 class SectionModel extends Equatable {
   final int id;
   final String name;

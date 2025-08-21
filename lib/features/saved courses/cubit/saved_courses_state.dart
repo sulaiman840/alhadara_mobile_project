@@ -21,12 +21,9 @@ class SavedCoursesLoaded extends SavedCoursesState {
   List<Object?> get props => [courses, count];
 }
 
-
 class SavedCoursesNavigate extends SavedCoursesState {
   final bool isEnrolled;
-
   final CourseModel courseModel;
-
   final EnrolledCourseModel? enrolledModel;
 
   const SavedCoursesNavigate({

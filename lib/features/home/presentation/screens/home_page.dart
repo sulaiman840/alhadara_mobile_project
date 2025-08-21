@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PointsCubit>().loadPoints();
       context.read<DepartmentsCubit>().fetchDepartments();
-      context.read<MyCoursesCubit>().fetchMyCourses();
+      context.read<MyCoursesCubit>().fetchFirstPage(perPage: 10);
       context.read<RecommendationsCubit>().fetchRecommendations();
     });
   }
@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
     await Future.wait([
       context.read<PointsCubit>().loadPoints(),
       context.read<DepartmentsCubit>().fetchDepartments(),
-      context.read<MyCoursesCubit>().fetchMyCourses(),
+      context.read<MyCoursesCubit>().fetchFirstPage(perPage: 10),
       context.read<RecommendationsCubit>().fetchRecommendations(),
     ]);
   }

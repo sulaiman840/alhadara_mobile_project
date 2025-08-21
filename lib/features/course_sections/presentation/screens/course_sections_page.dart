@@ -26,7 +26,6 @@ class _SectionsPageState extends State<SectionsPage> {
   @override
   void initState() {
     super.initState();
-    // Trigger load:
     context.read<SectionsCubit>().fetchSections(widget.course.id);
   }
 
@@ -81,12 +80,12 @@ class _SectionsPageState extends State<SectionsPage> {
   }
 
   Widget _buildSectionCard(SectionModel sec) {
-    // Format date range:
+
     final dateRange =
         '${sec.startDate.day}/${sec.startDate.month}/${sec.startDate.year}  -  '
         '${sec.endDate.day}/${sec.endDate.month}/${sec.endDate.year}';
 
-    // Build weekdays string:
+
     final weekdaysText = sec.weekDays.isEmpty
         ? 'لا يوجد مواعيد محددة'
         : sec.weekDays
@@ -94,7 +93,7 @@ class _SectionsPageState extends State<SectionsPage> {
     '${wd.name} (${wd.startTime.substring(0, 5)} - ${wd.endTime.substring(0, 5)})')
         .join('، ');
 
-    // Trainer names (or “لا يوجد مدرب”):
+
     final trainersText = sec.trainers.isEmpty
         ? 'لا يوجد مدرب محدد'
         : sec.trainers.map((t) => t.name).join('، ');
@@ -132,8 +131,8 @@ class _SectionsPageState extends State<SectionsPage> {
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: sec.state == 'pending'
-                      ? Colors.orange.withOpacity(0.2)
-                      : Colors.green.withOpacity(0.2),
+                      ? Colors.orange.withValues(alpha: 0.2)
+                      : Colors.green.withValues(alpha:0.2),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
@@ -149,7 +148,6 @@ class _SectionsPageState extends State<SectionsPage> {
           ),
           SizedBox(height: 8.h),
 
-          // Date range
           Row(
             children: [
               FaIcon(FontAwesomeIcons.calendarDays, size: 14.r, color: AppColor.gray3),
@@ -157,13 +155,13 @@ class _SectionsPageState extends State<SectionsPage> {
               Text(
                 dateRange,
                 style: TextStyle(
-                    fontSize: 14.sp, color: AppColor.textDarkBlue.withOpacity(0.8)),
+                    fontSize: 14.sp, color: AppColor.textDarkBlue.withValues(alpha:0.8)),
               ),
             ],
           ),
           SizedBox(height: 8.h),
 
-          // Seats info
+
           Row(
             children: [
               FaIcon(FontAwesomeIcons.chair, size: 14.r, color: AppColor.gray3),
@@ -171,7 +169,7 @@ class _SectionsPageState extends State<SectionsPage> {
               Text(
                 'مقاعد: ${sec.reservedSeats}/${sec.seatsOfNumber}',
                 style: TextStyle(
-                    fontSize: 14.sp, color: AppColor.textDarkBlue.withOpacity(0.8)),
+                    fontSize: 14.sp, color: AppColor.textDarkBlue.withValues(alpha:0.8)),
               ),
             ],
           ),
@@ -187,7 +185,7 @@ class _SectionsPageState extends State<SectionsPage> {
                 child: Text(
                   'المدربون: $trainersText',
                   style: TextStyle(
-                      fontSize: 14.sp, color: AppColor.textDarkBlue.withOpacity(0.8)),
+                      fontSize: 14.sp, color: AppColor.textDarkBlue.withValues(alpha:0.8)),
                 ),
               ),
             ],
@@ -204,24 +202,20 @@ class _SectionsPageState extends State<SectionsPage> {
                 child: Text(
                   'الأيام: $weekdaysText',
                   style: TextStyle(
-                      fontSize: 14.sp, color: AppColor.textDarkBlue.withOpacity(0.8)),
+                      fontSize: 14.sp, color: AppColor.textDarkBlue.withValues(alpha:0.8)),
                 ),
               ),
             ],
           ),
           SizedBox(height: 12.h),
-
-          // Register button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () async {
-                // Call Cubit.registerIntoSection(...) and await the Arabic message
+
                 final message =
                 await context.read<SectionsCubit>().registerIntoSection(sec.id);
 
-                // If the message contains the word "نجاح" (success), show green;
-                // otherwise, default to red (or fallback).
                 final isSuccess = message.contains('نجاح');
 
                 ScaffoldMessenger.of(context).showSnackBar(

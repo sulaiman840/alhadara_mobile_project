@@ -1,4 +1,3 @@
-// lib/features/my_course_details/presentation/widgets/tests_tab.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,8 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:alhadara_mobile_project/core/localization/app_localizations.dart';
 import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
-import '../../cubit/quiz_cubit.dart';
-import '../../cubit/quiz_state.dart';
+import '../../../cubit/quiz_cubit.dart';
+import '../../../cubit/quiz_state.dart';
 
 class TestsTab extends StatefulWidget {
   final int sectionId;

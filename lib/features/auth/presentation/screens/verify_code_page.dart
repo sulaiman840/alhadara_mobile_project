@@ -3,22 +3,27 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
-import '../../cubit/verify_cubit.dart';
-import '../../cubit/verify_state.dart';
+import 'package:alhadara_mobile_project/core/localization/app_localizations.dart';
+
+import '../../../../core/utils/app_colors.dart';
 import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
+import '../../../../shared/widgets/app_bar/custom_app_bar_title.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
+
+import '../../cubit/verify_cubit.dart';
+import '../../cubit/verify_state.dart';
 
 class VerifyCodePage extends StatefulWidget {
   const VerifyCodePage({Key? key}) : super(key: key);
 
   @override
-  _VerifyCodePageState createState() => _VerifyCodePageState();
+  State<VerifyCodePage> createState() => _VerifyCodePageState();
 }
 
 class _VerifyCodePageState extends State<VerifyCodePage> {
+  // Keep cells (count/flow) exactly as you had them
   final List<TextEditingController> _controllers =
   List.generate(5, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(5, (_) => FocusNode());
@@ -31,175 +36,193 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
   }
 
   void _onSubmit() {
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     final rawCode = _controllers.map((c) => c.text).join();
     if (rawCode.length < 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال جميع أرقام الرمز')),
+        SnackBar(
+          content: Text(loc.tr('verify_fill_all_digits'),
+              style: theme.textTheme.bodyMedium),
+          backgroundColor: theme.colorScheme.error.withOpacity(0.95),
+        ),
       );
       return;
     }
+
+    // Keep your reverse-then-parse logic intact
     final reversedCode = rawCode.split('').reversed.join();
     final token = int.tryParse(reversedCode);
     if (token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرمز غير صالح')),
+        SnackBar(
+          content:
+          Text(loc.tr('verify_invalid_code'), style: theme.textTheme.bodyMedium),
+          backgroundColor: theme.colorScheme.error.withOpacity(0.95),
+        ),
       );
       return;
     }
+
+    FocusScope.of(context).unfocus();
     context.read<VerifyCubit>().verifyAccount(token: token);
   }
 
   void _onResend() {
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    // If you later add a resend endpoint, call cubit here.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(loc.tr('resend_code'), style: theme.textTheme.bodyMedium),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     return BlocConsumer<VerifyCubit, VerifyState>(
       listener: (context, state) {
         if (state is VerifySuccess) {
-          final msgLower = state.message.trim().toLowerCase();
-          String displayMsg;
-          if (msgLower == 'your account has been verified') {
-            displayMsg = 'تم التحقق من حسابك بنجاح';
-          } else {
-            displayMsg = state.message;
-          }
+          // Prefer localized success message; fall back to backend message
+          final msg = state.message.trim().toLowerCase().contains('verified')
+              ? loc.tr('verify_account_verified')
+              : state.message;
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(displayMsg)),
+            SnackBar(
+              content: Text(msg, style: theme.textTheme.bodyMedium),
+              backgroundColor: AppColor.green,
+            ),
           );
           GoRouter.of(context).go(AppRoutesNames.login);
-        }
-
-        if (state is VerifyFailure) {
-          final errLower = state.errorMessage.trim().toLowerCase();
-          String displayErr;
-          if (errLower.contains('invalid code')) {
-            displayErr = 'الرمز غير صالح';
-          } else if (errLower.contains('account not verified')) {
-            displayErr = 'الحساب غير مُفعّل بعد';
-          } else {
-            displayErr = state.errorMessage;
+        } else if (state is VerifyFailure) {
+          final lower = state.errorMessage.trim().toLowerCase();
+          String err = state.errorMessage;
+          if (lower.contains('invalid code')) {
+            err = loc.tr('verify_invalid_code');
+          } else if (lower.contains('not verified')) {
+            err = loc.tr('verify_account_not_verified');
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(displayErr)),
+            SnackBar(
+              content: Text(err, style: theme.textTheme.bodyMedium),
+              backgroundColor: AppColor.red,
+            ),
           );
         }
       },
       builder: (context, state) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: Scaffold(
-            backgroundColor: AppColor.background,
-            appBar: CustomAppBar(
-              title: 'التحقق من الرمز',
-              onBack: () => context.go(AppRoutesNames.login),
-            ),
-            body: SafeArea(
-              child: Stack(
-                children: [
-                  ListView(
+        final isLoading = state is VerifyLoading;
+
+        return Scaffold(
+          appBar: CustomAppBarTitle(
+            title: loc.tr('verify_title'),
+            onBack: () => context.go(AppRoutesNames.login),
+          ),
+          body: SafeArea(
+            child: Stack(
+              children: [
+                LayoutBuilder(
+                  builder: (ctx, constraints) => SingleChildScrollView(
                     padding:
                     EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                    children: [
-                      SizedBox(height: 30.h),
-                      Text(
-                        'أدخل الرمز المكون من 5 أرقام الذي أرسلناه إلى بريدك الإلكتروني',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColor.textDarkBlue,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(5, (i) {
-                            return Container(
-                              margin: EdgeInsets.symmetric(horizontal: 6.w),
-                              width: 50.w,
-                              height: 50.w,
-                              child: TextField(
-                                controller: _controllers[i],
-                                focusNode: _focusNodes[i],
-                                textAlign: TextAlign.center,
-                                textDirection: TextDirection.ltr,
-                                keyboardType: TextInputType.number,
-                                maxLength: 1,
-                                style: TextStyle(
-                                  color: AppColor.textDarkBlue,
-                                  fontSize: 24.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                decoration: InputDecoration(
-                                  counterText: '',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    borderSide: BorderSide(
-                                      color: AppColor.purple,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (v) {
-                                  if (v.length == 1) {
-                                    if (i > 0) {
-                                      _focusNodes[i - 1].requestFocus();
-                                    } else {
-                                      _focusNodes[i].unfocus();
-                                    }
-                                  }
-                                },
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                      SizedBox(height: 40.h),
+                    child: ConstrainedBox(
+                      constraints:
+                      BoxConstraints(minHeight: constraints.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(height: 30.h),
 
-                      BlocBuilder<VerifyCubit, VerifyState>(
-                        builder: (context, verifyState) {
-                          return CustomButton(
-                            text: verifyState is VerifyLoading
-                                ? 'جارٍ التحقق...'
-                                : 'تحقق من الرمز',
-                            onPressed: verifyState is VerifyLoading
-                                ? null
-                                : _onSubmit,
-                          );
-                        },
-                      ),
-                      SizedBox(height: 12.h),
-
-                      Center(
-                        child: TextButton(
-                          onPressed: _onResend,
-                          child: Text(
-                            'إعادة إرسال الرمز',
-                            style: TextStyle(
-                              color: AppColor.purple,
-                              fontSize: 14.sp,
+                            // Helper text
+                            Text(
+                              loc.tr('verify_hint'),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyLarge,
                             ),
-                          ),
+                            SizedBox(height: 8.h),
+
+                            // === OTP CELLS (kept as-is: RTL row + LTR digits + same focus flow) ===
+                            Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(5, (i) {
+                                  return Container(
+                                    margin:
+                                    EdgeInsets.symmetric(horizontal: 6.w),
+                                    width: 50.w,
+                                    height: 50.w,
+                                    child: TextField(
+                                      controller: _controllers[i],
+                                      focusNode: _focusNodes[i],
+                                      textAlign: TextAlign.center,
+                                      textDirection: TextDirection.ltr,
+                                      keyboardType: TextInputType.number,
+                                      maxLength: 1,
+                                      style: TextStyle(
+                                        fontSize: 24.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      decoration: InputDecoration(
+                                        counterText: '',
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(12.r),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(12.r),
+                                          borderSide: BorderSide(
+                                            color: theme.colorScheme.primary,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      onChanged: (v) {
+                                        // Keep original flow behavior
+                                        if (v.length == 1) {
+                                          if (i > 0) {
+                                            _focusNodes[i - 1].requestFocus();
+                                          } else {
+                                            _focusNodes[i].unfocus();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+
+                            SizedBox(height: 40.h),
+
+                            CustomButton(
+                              text:
+                              isLoading ? loc.tr('verifying') : loc.tr('verify_button'),
+                              onPressed: isLoading ? null : _onSubmit,
+                            ),
+
+
+                            const Spacer(),
+                            SizedBox(height: 16.h),
+                          ],
                         ),
                       ),
-
-                      SizedBox(height: 100.h),
-                    ],
-                  ),
-
-                  if (state is VerifyLoading)
-                    const LoadingOverlay(
-                      message: 'جارٍ التحقق من الرمز...',
                     ),
-                ],
-              ),
+                  ),
+                ),
+
+                if (isLoading)
+                  LoadingOverlay(message: loc.tr('verify_loading_message')),
+              ],
             ),
           ),
         );

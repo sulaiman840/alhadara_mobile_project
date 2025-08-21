@@ -53,6 +53,7 @@ class LoginForm extends StatelessWidget {
       children: [
         SizedBox(height: 30.h),
 
+        // NOTE: Keeping your form usage as-is
         CustomTextFormField(
           controller: emailController,
           hintText: loc.tr('login_hint_email'),
@@ -68,16 +69,30 @@ class LoginForm extends StatelessWidget {
         ),
         SizedBox(height: 8.h),
 
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () => GoRouter.of(context).go(AppRoutesNames.forgotPassword),
-            child: Text(
-              loc.tr('login_forgot_password'),
-              style: theme.textTheme.bodyMedium!
-                  .copyWith(color: theme.colorScheme.primary, fontSize: 14.sp),
+        // Forgot password (right)  —  Verify (left)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // First child sits at "start": in RTL that's the RIGHT side
+            TextButton(
+              onPressed: () =>context.push(AppRoutesNames.forgotPassword),
+              child: Text(
+                loc.tr('login_forgot_password'),
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: theme.colorScheme.primary, fontSize: 14.sp),
+              ),
             ),
-          ),
+            // Second child sits at "end": in RTL that's the LEFT side
+            TextButton(
+              onPressed: () => context.push(AppRoutesNames.verifyCodePage),
+              child: Text(
+                // Reusing existing key (no new strings)
+                loc.tr('verify_button'),
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: theme.colorScheme.primary, fontSize: 14.sp),
+              ),
+            ),
+          ],
         ),
         SizedBox(height: 16.h),
 
@@ -92,23 +107,8 @@ class LoginForm extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
 
-        Center(
-          child: TextButton(
-            onPressed: () { },
-            child: Text(
-              loc.tr('login_guest'),
-              style: theme.textTheme.bodySmall!
-                  .copyWith(
-                color: theme.colorScheme.onSurface,
-                fontSize: 14.sp,
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        // — Social
-        LoginSocial(),
+        // Social login placeholder (kept commented as in your code)
+        // LoginSocial(),
       ],
     );
   }

@@ -8,9 +8,9 @@ import 'package:alhadara_mobile_project/core/localization/app_localizations.dart
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../../../shared/widgets/pdf_viewer_page.dart';
-import '../../cubit/section_files_cubit.dart';
-import '../../cubit/section_files_state.dart';
+import '../../../../../shared/widgets/pdf_viewer_page.dart';
+import '../../../cubit/section_files_cubit.dart';
+import '../../../cubit/section_files_state.dart';
 
 class HomeworkTab extends StatelessWidget {
   final int sectionId;

@@ -47,8 +47,9 @@ class _MenuPageState extends State<MenuPage> {
 
     final items = const [
       MenuItemData(FontAwesomeIcons.gift,           'menu_gifts',        AppRoutesNames.gifts),
-      MenuItemData(FontAwesomeIcons.circleCheck,   'menu_active_ads',   AppRoutesNames.activeAds),
+      MenuItemData(FontAwesomeIcons.bullhorn, 'menu_active_ads', AppRoutesNames.activeAds),
       MenuItemData(FontAwesomeIcons.clipboardList, 'menu_test_results', AppRoutesNames.testResults),
+      MenuItemData(FontAwesomeIcons.circleCheck,          'finished_courses_title',     AppRoutesNames.finishedCourses),
       MenuItemData(FontAwesomeIcons.gear,          'menu_settings',     AppRoutesNames.settings),
       MenuItemData(FontAwesomeIcons.circleQuestion,'menu_help_support', AppRoutesNames.complaints),
     ];

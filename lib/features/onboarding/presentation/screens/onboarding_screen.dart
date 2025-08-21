@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:alhadara_mobile_project/core/localization/app_localizations.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
 import 'package:alhadara_mobile_project/shared/widgets/buttons/custom_button.dart';
@@ -18,6 +20,8 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
+  static const _kSeenOnboarding = 'seen_onboarding';
+
   final _controller = PageController();
   int _currentIndex = 0;
 
@@ -34,6 +38,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
     ),
   ];
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _finishOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kSeenOnboarding, true);
+    if (!mounted) return;
+    context.go(AppRoutesNames.login);
+  }
+
   void _onNext() {
     if (_currentIndex < _slides.length - 1) {
       _controller.nextPage(
@@ -41,7 +58,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      GoRouter.of(context).go(AppRoutesNames.login);
+      _finishOnboarding();
     }
   }
 
@@ -54,6 +71,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       body: SafeArea(
         child: Column(
           children: [
+
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -63,7 +81,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
 
-            // dots
             Padding(
               padding: EdgeInsets.only(bottom: 30.h),
               child: DotsIndicator(
@@ -72,7 +89,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
             ),
 
-            // next button
             CustomButton(
               text: loc.tr('onboarding_next'),
               onPressed: _onNext,

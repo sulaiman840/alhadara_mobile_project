@@ -40,6 +40,8 @@ import '../../features/menu_features/ads/cubit/ads_cubit.dart';
 import '../../features/menu_features/ads/presentation/screens/active_ads_page.dart';
 import '../../features/menu_features/complaints/cubit/complaints_cubit.dart';
 import '../../features/menu_features/complaints/presentation/screens/complaints_page.dart';
+import '../../features/menu_features/finished_courses/cubit/finished_courses_cubit.dart';
+import '../../features/menu_features/finished_courses/presentation/screens/finished_courses_page.dart';
 import '../../features/menu_features/gifts/cubit/gifts_cubit.dart';
 import '../../features/menu_features/gifts/presentation/screens/gifts_page.dart';
 import '../../features/menu_features/menu/cubit/logout_cubit/logout_cubit.dart';
@@ -49,6 +51,7 @@ import '../../features/menu_features/settings/presentation/screens/settings_page
 import '../../features/menu_features/settings/presentation/screens/theme_mode_selection_page.dart';
 import '../../features/menu_features/test_results/cubit/grades_cubit.dart';
 import '../../features/menu_features/test_results/presentation/screens/test_results_page.dart';
+import '../../features/my_course_details/cubit/section_progress_cubit.dart';
 import '../../features/notifications/cubit/notifications_cubit.dart';
 import '../../features/profile/cubit/profile_cubit.dart';
 import '../../features/ratings/cubit/ratings_cubit.dart';
@@ -216,7 +219,7 @@ class AppRouter {
           child: MultiBlocProvider(
             providers: [
               BlocProvider<MyCoursesCubit>(
-                  create: (_) => getIt<MyCoursesCubit>()..fetchMyCourses()),
+                  create: (_) => getIt<MyCoursesCubit>()..fetchFirstPage(perPage: 10),),
               BlocProvider<SavedCoursesCubit>(
                   create: (_) => getIt<SavedCoursesCubit>()..fetchSaved()),
             ],
@@ -228,7 +231,7 @@ class AppRouter {
       ),
 
       GoRoute(
-        name: 'myCourseDetails',
+        name: 'my_course_details_widgets',
         path: AppRoutesNames.myCourseDetails,
         pageBuilder: (ctx, state) {
           final sectionId = int.parse(state.pathParameters['enrolledId']!);
@@ -237,11 +240,15 @@ class AppRouter {
             child: MultiBlocProvider(
               providers: [
                 BlocProvider<MyCoursesCubit>(
-                  create: (_) => getIt<MyCoursesCubit>()..fetchMyCourses(),
+                  create: (_) => getIt<MyCoursesCubit>()..fetchFirstPage(perPage: 10),
                 ),
                 BlocProvider<RatingsCubit>(
                   create: (_) =>
                       getIt<RatingsCubit>()..loadSectionRatings(sectionId),
+                ),
+                BlocProvider<SectionProgressCubit>(
+                  create: (_) =>
+                  getIt<SectionProgressCubit>()..load(sectionId),
                 ),
               ],
               child: MyCourseDetailsPage(enrolledId: sectionId),
@@ -378,7 +385,6 @@ class AppRouter {
           child: const NotificationsPage(),
         ),
       ),
-
       GoRoute(
         path: AppRoutesNames.profile,
         builder: (ctx, state) => BlocProvider<ProfileCubit>(
@@ -410,7 +416,18 @@ class AppRouter {
           child: const GiftsPage(),
         ),
       ),
-
+      GoRoute(
+        path: AppRoutesNames.finishedCourses,
+        pageBuilder: (ctx, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: BlocProvider<FinishedCoursesCubit>(
+            create: (_) => getIt<FinishedCoursesCubit>()..loadFinished(),
+            child: const FinishedCoursesPage(),
+          ),
+          transitionDuration: Duration.zero,
+          transitionsBuilder: (_, __, ___, child) => child,
+        ),
+      ),
       GoRoute(
         path: AppRoutesNames.complaints,
         builder: (ctx, state) => BlocProvider<ComplaintsCubit>(
@@ -474,7 +491,7 @@ class AppRouter {
       if (tabIndex == 0) {
         ctx.read<PointsCubit>().loadPoints();
         ctx.read<DepartmentsCubit>().fetchDepartments();
-        ctx.read<MyCoursesCubit>().fetchMyCourses();
+        ctx.read<MyCoursesCubit>().fetchFirstPage(perPage: 10);
       }
       return;
     }

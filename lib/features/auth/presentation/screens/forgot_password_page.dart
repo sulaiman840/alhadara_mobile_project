@@ -1,11 +1,11 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:alhadara_mobile_project/core/utils/app_colors.dart';
 import 'package:alhadara_mobile_project/core/navigation/routes_names.dart';
+import 'package:alhadara_mobile_project/core/localization/app_localizations.dart';
+
 import '../../../../shared/widgets/TextFormField/custom_text_form_field.dart';
 import '../../../../shared/widgets/buttons/custom_button.dart';
 import '../../../../shared/widgets/app_bar/custom_app_bar.dart';
@@ -17,12 +17,12 @@ class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({Key? key}) : super(key: key);
 
   @override
-  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
+  final _emailController = TextEditingController();
 
   @override
   void dispose() {
@@ -31,90 +31,97 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   String? _validateEmail(String? v) {
-    if (v == null || v.isEmpty) return 'الرجاء إدخال البريد الإلكتروني';
-    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!regex.hasMatch(v)) return 'بريد إلكتروني غير صالح';
+    final loc = AppLocalizations.of(context);
+    if (v == null || v.isEmpty) return loc.tr('login_error_enter_email');
+    final regex = RegExp(r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$');
+    if (!regex.hasMatch(v)) return loc.tr('login_error_invalid_email');
     return null;
   }
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
       FocusScope.of(context).unfocus();
-      final email = _emailController.text.trim();
-      context.read<ForgotPasswordCubit>().forgotPassword(email: email);
+      context.read<ForgotPasswordCubit>().forgotPassword(
+        email: _emailController.text.trim(),
+      );
     }
   }
+
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     return BlocConsumer<ForgotPasswordCubit, ForgotPasswordState>(
       listener: (context, state) {
         if (state is ForgotPasswordSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.green,
+              content: Text(state.message, style: theme.textTheme.bodyMedium),
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.9),
             ),
           );
-          GoRouter.of(context).go(AppRoutesNames.resetPassword);
-        }
-        if (state is ForgotPasswordFailure) {
+          context.push(AppRoutesNames.resetPassword);
+        } else if (state is ForgotPasswordFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.errorMessage),
-              backgroundColor: Colors.red,
+              content: Text(state.errorMessage, style: theme.textTheme.bodyMedium),
+              backgroundColor: theme.colorScheme.error.withOpacity(0.95),
             ),
           );
         }
       },
       builder: (context, state) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: Scaffold(
-            backgroundColor: AppColor.background,
-            appBar: CustomAppBar(
-              title: 'نسيت كلمة المرور',
-              onBack: () => context.go(AppRoutesNames.login),
-            ),
-            body: SafeArea(
-              child: LayoutBuilder(
-                builder: (ctx, constraints) => SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SizedBox(height: 30.h),
-                            Text(
-                              'لا تقلق، ما عليك سوى إدخال بريدك الإلكتروني\nوسنرسل رمز التحقق',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: AppColor.textDarkBlue,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                            SizedBox(height: 30.h),
-                            CustomTextFormField(
-                              controller: _emailController,
-                              hintText: 'البريد الإلكتروني',
-                              keyboardType: TextInputType.emailAddress,
-                              validator: _validateEmail,
-                            ),
-                            SizedBox(height: 24.h),
-                            CustomButton(
-                              text: state is ForgotPasswordLoading
-                                  ? 'جاري الإرسال...'
-                                  : 'التأكيد',
-                              onPressed:
-                              state is ForgotPasswordLoading ? null : _submit,
-                            ),
-                            const Spacer(),
-                            SizedBox(height: 16.h),
-                          ],
-                        ),
+        final isLoading = state is ForgotPasswordLoading;
+
+        return Scaffold(
+
+          appBar: CustomAppBar(
+            title: loc.tr('login_forgot_password'),
+
+          ),
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (ctx, constraints) => SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(height: 30.h),
+
+                          // Helper text (localized + themed)
+                          Text(
+                            loc.tr('forgot_password_hint'),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge,
+                          ),
+
+                          SizedBox(height: 30.h),
+
+                          // Email
+                          CustomTextFormField(
+                            controller: _emailController,
+                            hintText: loc.tr('login_hint_email'),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: _validateEmail,
+                          ),
+
+                          SizedBox(height: 24.h),
+
+                          // Submit
+                          CustomButton(
+                            text: isLoading ? loc.tr('sending') : loc.tr('send'),
+                            onPressed: isLoading ? null : _submit,
+                          ),
+
+                          const Spacer(),
+                          SizedBox(height: 16.h),
+                        ],
                       ),
                     ),
                   ),

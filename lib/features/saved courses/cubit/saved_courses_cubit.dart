@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:collection/collection.dart';
 import '../../home/data/models/course_model.dart';
 import '../../my_course_details/data/models/enrolled_course_model.dart';
 import '../../my_course_details/data/repositories/my_courses_repository.dart';
@@ -13,6 +12,7 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
 
   List<SavedCourse> _cachedCourses = [];
   int _cachedCount = 0;
+  bool _selecting = false;
 
   SavedCoursesCubit(this._savedRepo, this._myCoursesRepo)
       : super(SavedCoursesLoading());
@@ -38,18 +38,26 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
         await _savedRepo.addToSaved(courseId);
       }
       await fetchSaved();
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Future<void> selectCourse(SavedCourse c) async {
-    List<EnrolledCourseModel> enrolled;
+    if (_selecting) return;
+    _selecting = true;
+
+    EnrolledCourseModel? match;
     try {
-      enrolled = await _myCoursesRepo.fetchMyCourses();
+
+      match = await _myCoursesRepo.findEnrollmentByCourseId(
+        c.id,
+        perPage: 50,
+        maxPages: 100,
+      );
     } catch (_) {
-      enrolled = [];
+      match = null;
+    } finally {
+      _selecting = false;
     }
-    final match = enrolled.firstWhereOrNull((e) => e.course.id == c.id);
 
     final courseModel = CourseModel(
       id: c.id,
@@ -66,6 +74,7 @@ class SavedCoursesCubit extends Cubit<SavedCoursesState> {
       courseModel: courseModel,
       enrolledModel: match,
     ));
+
 
     emit(SavedCoursesLoaded(_cachedCourses, _cachedCount));
   }

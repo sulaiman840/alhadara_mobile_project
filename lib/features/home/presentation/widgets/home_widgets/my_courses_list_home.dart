@@ -58,7 +58,7 @@ class MyCoursesListHome extends StatelessWidget {
                           : '${ConstString.baseURl}${e.course.photo}';
                       return GestureDetector(
                         onTap: () => context.pushNamed(
-                          'myCourseDetails',
+                          'my_course_details_widgets',
                           pathParameters: {'enrolledId': e.id.toString()},
                         ),
                         child: Column(

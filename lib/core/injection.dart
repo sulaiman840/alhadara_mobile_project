@@ -33,6 +33,9 @@ import '../features/menu_features/ads/data/repositories/ads_repository.dart';
 import '../features/menu_features/complaints/cubit/complaints_cubit.dart';
 import '../features/menu_features/complaints/data/datasources/complaints_remote_data_source.dart';
 import '../features/menu_features/complaints/data/repositories/complaints_repository.dart';
+import '../features/menu_features/finished_courses/cubit/finished_courses_cubit.dart';
+import '../features/menu_features/finished_courses/data/datasources/finished_courses_remote_data_source.dart';
+import '../features/menu_features/finished_courses/data/repositories/finished_courses_repository.dart';
 import '../features/menu_features/gifts/cubit/gifts_cubit.dart';
 import '../features/menu_features/gifts/data/datasources/gifts_remote_data_source.dart';
 import '../features/menu_features/gifts/data/repositories/gifts_repository.dart';
@@ -43,12 +46,15 @@ import '../features/menu_features/test_results/data/repositories/grades_reposito
 import '../features/my_course_details/cubit/my_courses_cubit.dart';
 import '../features/my_course_details/cubit/quiz_cubit.dart';
 import '../features/my_course_details/cubit/section_files_cubit.dart';
+import '../features/my_course_details/cubit/section_progress_cubit.dart';
 import '../features/my_course_details/data/datasources/my_courses_remote_data_source.dart';
 import '../features/my_course_details/data/datasources/quiz_remote_data_source.dart';
 import '../features/my_course_details/data/datasources/section_files_remote_data_source.dart';
+import '../features/my_course_details/data/datasources/section_progress_remote_data_source.dart';
 import '../features/my_course_details/data/repositories/my_courses_repository.dart';
 import '../features/my_course_details/data/repositories/quiz_repository.dart';
 import '../features/my_course_details/data/repositories/section_files_repository.dart';
+import '../features/my_course_details/data/repositories/section_progress_repository.dart';
 import '../features/notifications/cubit/notifications_cubit.dart';
 import '../features/notifications/data/datasources/notifications_remote_data_source.dart';
 import '../features/notifications/data/repositories/notifications_repository.dart';
@@ -329,6 +335,29 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<NotificationsCubit>(
         () => NotificationsCubit(getIt<NotificationsRepository>()),
   );
+  ///////////////////////
+  getIt.registerLazySingleton<FinishedCoursesRemoteDataSource>(
+        () => FinishedCoursesRemoteDataSourceImpl(getIt<Dio>()),
+  );
+
+  getIt.registerLazySingleton<FinishedCoursesRepository>(
+        () => FinishedCoursesRepositoryImpl(getIt<FinishedCoursesRemoteDataSource>()),
+  );
+
+  getIt.registerFactory<FinishedCoursesCubit>(
+        () => FinishedCoursesCubit(getIt<FinishedCoursesRepository>()),
+  );
+  ///////////////
+  getIt.registerLazySingleton<SectionProgressRemoteDataSource>(
+        () => SectionProgressRemoteDataSourceImpl(getIt<Dio>()),
+  );
+  getIt.registerLazySingleton<SectionProgressRepository>(
+        () => SectionProgressRepositoryImpl(getIt<SectionProgressRemoteDataSource>()),
+  );
+  getIt.registerFactory<SectionProgressCubit>(
+        () => SectionProgressCubit(getIt<SectionProgressRepository>()),
+  );
+
 }
 
 

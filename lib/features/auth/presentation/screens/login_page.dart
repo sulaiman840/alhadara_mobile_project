@@ -83,7 +83,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               if (isLoading)
                 LoadingOverlay(
                   message: loc.tr('login_button_loading'),

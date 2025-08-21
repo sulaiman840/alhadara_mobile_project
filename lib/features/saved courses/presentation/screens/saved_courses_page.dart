@@ -28,7 +28,7 @@ class SavedCoursesPage extends StatelessWidget {
           if (state is SavedCoursesNavigate) {
             if (state.isEnrolled) {
               ctx.pushNamed(
-                'myCourseDetails',
+                'my_course_details_widgets',
                 pathParameters: {
                   'enrolledId': state.enrolledModel!.id.toString()
                 },

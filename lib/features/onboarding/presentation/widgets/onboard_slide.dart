@@ -31,7 +31,7 @@ class OnboardSlideWidget extends StatelessWidget {
           child: Text(
             loc.tr(slide.textKey),
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
+            style:TextStyle(color: AppColor.textDarkBlue,fontSize: 20.sp, fontWeight: FontWeight.bold),
           ),
         ),
       ],
